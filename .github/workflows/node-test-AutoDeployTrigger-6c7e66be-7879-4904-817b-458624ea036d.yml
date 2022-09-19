@@ -3,12 +3,12 @@ name: Trigger auto deployment for node-test
 # When this action will be executed
 on:
   # Automatically trigger it when detected changes in repo
-  push:
-    branches: 
-      [ main ]
-    paths:
-    - '**'
-    - '.github/workflows/node-test-AutoDeployTrigger-6c7e66be-7879-4904-817b-458624ea036d.yml'
+  # push:
+  #   branches: 
+  #     [ main ]
+  #   paths:
+  #   - '**'
+  #   - '.github/workflows/node-test-AutoDeployTrigger-6c7e66be-7879-4904-817b-458624ea036d.yml'
 
   # Allow mannually trigger 
   workflow_dispatch:      
