@@ -2,7 +2,7 @@
 
 # Build Node.js app
 # ------------------------------------
-FROM node:16 as build
+FROM node:18 as build
 WORKDIR /app
 COPY package*.json .
 RUN npm ci --cache /tmp/empty-cache
@@ -11,7 +11,7 @@ RUN npm run build
 
 # Run Node.js app
 # ------------------------------------
-FROM node:16
+FROM node:18
 ENV NODE_ENV=production
 
 WORKDIR /app
