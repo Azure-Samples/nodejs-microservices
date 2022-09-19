@@ -22,6 +22,7 @@ cd ..
 
 # TODO: get src folder and build command from yaml
 echo "Building 'nest-demo'..."
+cd nest
 npm run docker:build
 
 echo "Build complete for project '${project_name}'."
