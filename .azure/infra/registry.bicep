@@ -37,7 +37,7 @@ var uid = uniqueString(resourceGroup().id, projectName, environment, location)
 // Azure Container Registry
 // https://docs.microsoft.com/azure/templates/microsoft.containerregistry/registries?tabs=bicep
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2022-02-01-preview' = {
-  name: 'cr${projectName}${environment}${uid}'
+  name: 'cr${uid}'
   location: location
   tags: tags
   sku: {

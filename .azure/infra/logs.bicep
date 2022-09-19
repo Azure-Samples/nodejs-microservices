@@ -42,4 +42,4 @@ resource logsWorkspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' = {
 // ---------------------------------------------------------------------------
 
 output logsWorkspaceName string = logsWorkspace.name
-output logsWorkspaceCustomedId string = logsWorkspace.properties.customerId
+output logsWorkspaceCustomerId string = logsWorkspace.properties.customerId

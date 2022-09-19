@@ -72,7 +72,7 @@ module containers './container.bicep' = [for imageName in containerImageNames: {
 output resourceGroupName string = resourceGroup().name
 
 output logsWorkspaceName string = logs.outputs.logsWorkspaceName
-output logsWorkspaceCustomedId string = logs.outputs.logsWorkspaceCustomedId
+output logsWorkspaceCustomerId string = logs.outputs.logsWorkspaceCustomerId
 
 output registryName string = registry.outputs.registryName
 output registryServer string = registry.outputs.registryServer

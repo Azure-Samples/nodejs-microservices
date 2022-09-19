@@ -38,7 +38,7 @@ resource logsWorkspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' exi
 }
 
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2022-02-01-preview' existing = {
-  name: 'cr${projectName}${environment}${uid}'
+  name: 'cr${uid}'
 }
 
 // Azure Container Environment
