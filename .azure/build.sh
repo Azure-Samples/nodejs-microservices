@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 ##############################################################################
-# THIS FILE IS AUTO-GENERATED, DO NOT EDIT IT MANUALLY!
-# If you need to make changes, edit the file `blue.yaml`.
-##############################################################################
-
-##############################################################################
 # Usage: ./build.sh
 # Builds the project before deployment.
+##############################################################################
+# THIS FILE IS AUTO-GENERATED, DO NOT EDIT IT MANUALLY!
+# If you need to make changes, edit the file `blue.yaml`.
 ##############################################################################
 
 set -e

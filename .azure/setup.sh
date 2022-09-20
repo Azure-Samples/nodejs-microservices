@@ -3,6 +3,8 @@
 # Usage: ./setup.sh <project_name> [environment_name] [location] [options]
 # Setup the current GitHub repo for deploying on Azure.
 ##############################################################################
+# Dependencies: Azure CLI, GitHub CLI, jq
+##############################################################################
 
 set -e
 cd $(dirname ${BASH_SOURCE[0]})

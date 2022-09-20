@@ -3,6 +3,8 @@
 # Usage: ./deploy.sh <environment_name>
 # Deploys the Azure resources for this project.
 ##############################################################################
+# Dependencies: Azure CLI, Docker CLI, jq
+##############################################################################
 
 set -e
 cd $(dirname ${BASH_SOURCE[0]})
