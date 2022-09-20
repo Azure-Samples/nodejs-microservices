@@ -19,9 +19,6 @@ if [ ! -f ".${environment}.env" ]; then
   echo "Error: file '.${environment}.env' not found."
   exit 1
 fi
-
-# TODO: include as param of infra create
-./infra.sh secrets
 source ".${environment}.env"
 
 echo "Deploying environment '${environment}'..."
