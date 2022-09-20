@@ -7,7 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --cache /tmp/empty-cache
 COPY . ./
-RUN npm run build
+# RUN npm run build
 
 # Run Node.js app
 # ------------------------------------
