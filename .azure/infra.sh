@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ##############################################################################
 # Usage: ./infra.sh <command> <project_name> [environment_name] [location]
-# Creates or deletes the Azure infrastructure for this project.
+# Manages the Azure infrastructure for this project.
 ##############################################################################
 # Dependencies: Azure CLI, jq, perl
 ##############################################################################
