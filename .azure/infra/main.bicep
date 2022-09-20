@@ -53,7 +53,9 @@ module registry './registry.bicep' = {
 }
 
 var containerImageNames = [
-  'nest-demo'
+  'nest-api'
+  'express-api'
+  'fastify-api'
 ]
 
 module containers './container.bicep' = [for imageName in containerImageNames: {
