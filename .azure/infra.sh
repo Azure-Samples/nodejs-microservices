@@ -3,6 +3,8 @@
 # Usage: ./infra.sh <command> <project_name> [environment_name] [location]
 # Creates or deletes the Azure infrastructure for this project.
 ##############################################################################
+# Dependencies: Azure CLI, jq, perl
+##############################################################################
 
 set -e
 cd $(dirname ${BASH_SOURCE[0]})
@@ -31,7 +33,7 @@ showUsage() {
   echo
 }
 
-function toLowerSnakeCase() {
+toLowerSnakeCase() {
   echo ${1} |
     perl -pe 's/([a-z\d])([A-Z]+)/$1_$2/g' |
     perl -pe 's/[ _-]+/_/g' |
@@ -56,17 +58,12 @@ createSettings() {
   echo "Settings for environment '${environment}' saved to '${env_file}'."
 }
 
-if [ -z "$project_name" ]; then
-  showUsage
-  echo "Error: project name is required."
-  exit 1
-fi
-
-if [ "${subcommand}" == "create" ]; then
+createInfrastructure() {
   echo "Preparing environment '${environment}' of project '${project_name}'..."
   az group create \
     --name ${resource_group_name} \
     --location ${location} \
+    --tags project=${project_name} environment=${environment} managedBy=blue \
     --output none
   echo "Resource group '${resource_group_name}' ready."
   outputs=$( \
@@ -84,18 +81,24 @@ if [ "${subcommand}" == "create" ]; then
   createSettings "${outputs}"
   # echo "${outputs}" > outputs.json
   echo "Environment '${environment}' of project '${project_name}' ready."
-elif [ "${subcommand}" == "delete" ]; then
+}
+
+deleteInfrastructure() {
   echo "Deleting environment '${environment}' of project '${project_name}'..."
   az group delete --yes --name "rg-${project_name}-${environment}"
   echo "Environment '${environment}' of project '${project_name}' deleted."
-elif [ "${subcommand}" == "cancel" ]; then
+}
+
+cancelInfrastructureDeployment() {
   echo "Cancelling preparation of environment '${environment}' of project '${project_name}'..."
   az deployment group cancel \
     --resource-group ${resource_group_name} \
     --name "deployment-${project_name}-${environment}-${location}"
     --verbose
   echo "Preparation of '${environment}' of project '${project_name}' cancelled."
-elif [ "${subcommand}" == "env" ]; then
+}
+
+retrieveEnvironmentSettings() {
   echo "Retrieving settings for environment '${environment}' of project '${project_name}'..." 
   outputs=$( \
     az deployment group show \
@@ -104,7 +107,30 @@ elif [ "${subcommand}" == "env" ]; then
       --query properties.outputs \
   )
   createSettings "${outputs}"
-else
+}
+
+if [ -z "$project_name" ]; then
   showUsage
+  echo "Error: project name is required."
   exit 1
 fi
+
+case "$subcommand" in
+  create)
+    createInfrastructure
+    ;;
+  delete)
+    deleteInfrastructure
+    ;;
+  cancel)
+    cancelInfrastructureDeployment
+    ;;
+  env)
+    retrieveEnvironmentSettings
+    ;;
+  *)
+    showUsage
+    echo "Error: unknown command '$subcommand'."
+    exit 1
+    ;;
+esac
