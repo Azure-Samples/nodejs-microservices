@@ -29,7 +29,7 @@ terminate=false
 ci_login=false
 args=()
 
-while [[ $# -gt 0 ]]; do
+while [ $# -gt 0 ]; do
   case $1 in
     -s|--skip-login)
       skip_login=true

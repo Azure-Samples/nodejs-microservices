@@ -19,6 +19,9 @@ if [ ! -f ".${environment}.env" ]; then
   echo "Error: file '.${environment}.env' not found."
   exit 1
 fi
+
+# TODO: include as param of infra create
+./infra.sh secrets
 source ".${environment}.env"
 
 echo "Deploying environment '${environment}'..."
@@ -27,22 +30,6 @@ subscription_id="$(echo $AZURE_CREDENTIALS | jq -r .subscriptionId)"
 tenant_id="$(echo $AZURE_CREDENTIALS | jq -r .tenantId)"
 commit_sha="$(git rev-parse HEAD)"
 
-if [ ! -z "$registry_name" ]; then
-  # Get registry credentials
-  registry_username=$( \
-    az acr credential show \
-      --name ${registry_name} \
-      --query "username" \
-      --output tsv \
-    )
-  registry_password=$( \
-    az acr credential show \
-      --name ${registry_name} \
-      --query "passwords[0].value" \
-      --output tsv \
-    )
-fi
-
 az config set extension.use_dynamic_install=yes_without_prompt
 cd ..
 
@@ -50,16 +37,16 @@ cd ..
 for i in ${!container_image_names[@]}; do
   container_image_name=${container_image_names[$i]}
   container_app_name=${container_app_names[$i]}
-  conatiner_app_url=${container_app_urls[$i]}
+  container_app_url=${container_app_urls[$i]}
 
   # echo "Building '${container_app_name}'..."
   # TODO: get src folder and build command from yaml
   # npm run docker:build
 
   echo "Deploying '${container_app_name}'..."
-  docker login \
+  echo ${registry_password} | docker login \
     --username ${registry_username} \
-    --password ${registry_password} \
+    --password-stdin \
     ${registry_name}.azurecr.io
 
   docker image tag ${container_image_name} ${registry_name}.azurecr.io/${container_image_name}:${commit_sha}

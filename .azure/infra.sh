@@ -3,7 +3,7 @@
 # Usage: ./infra.sh <command> <project_name> [environment_name] [location]
 # Creates or deletes the Azure infrastructure for this project.
 ##############################################################################
-# Dependencies: Azure CLI, jq, perl
+# Dependencies: Azure CLI, jq, perl, grep
 ##############################################################################
 
 set -e
@@ -26,10 +26,11 @@ showUsage() {
   echo "Manages the Azure infrastructure for this project."
   echo
   echo "Commands:"
-  echo "  create  Creates the infrastructure for this project."
-  echo "  delete  Deletes the infrastructure for this project."
-  echo "  cancel  Cancels the last infrastructure deployment."
-  echo "  env     Retrieve settings for the target environment."
+  echo "  create   Creates the infrastructure for this project."
+  echo "  delete   Deletes the infrastructure for this project."
+  echo "  cancel   Cancels the last infrastructure deployment."
+  echo "  env      Retrieve settings for the target environment."
+  echo "  secrets  Retrieve secrets for the target environment."
   echo
 }
 
@@ -109,6 +110,41 @@ retrieveEnvironmentSettings() {
   createSettings "${outputs}"
 }
 
+retrieveSecrets() {
+  secrets_sep="### Secrets ###"
+
+  if [ ! -f ".${environment}.env" ] || grep -q "${secrets_sep}" ".${environment}.env"; then
+    retrieveEnvironmentSettings
+  fi
+  source ".${environment}.env"
+
+  echo "Retrieving secrets for environment '${environment}' of project '${project_name}'..."
+
+  env_file=".${environment}.env"
+  echo -e "\n${secrets_sep}\n" >> ${env_file}
+
+  # Get registry credentials
+  if [ ! -z "$registry_name" ]; then
+    registry_username=$( \
+      az acr credential show \
+        --name ${registry_name} \
+        --query "username" \
+        --output tsv \
+      )
+    echo "registry_username=${registry_username}" >> ${env_file}
+
+    registry_password=$( \
+      az acr credential show \
+        --name ${registry_name} \
+        --query "passwords[0].value" \
+        --output tsv \
+      )
+    echo "registry_password=${registry_password}" >> ${env_file}
+  fi
+
+  # TODO: retrieve other secrets (swa tokens, connection strings, etc.)
+}
+
 if [ -z "$project_name" ]; then
   showUsage
   echo "Error: project name is required."
@@ -127,6 +163,9 @@ case "$subcommand" in
     ;;
   env)
     retrieveEnvironmentSettings
+    ;;
+  secrets)
+    retrieveSecrets
     ;;
   *)
     showUsage
