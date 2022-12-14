@@ -8,10 +8,10 @@
   },
   "scripts": {
     "test": "tap \"test/**/*.test.js\"",
-    "start": "fastify start -l info app.js",
-    "dev": "fastify start -w -l info -P app.js",
+    "start": "fastify start -l info app.js -p 4001",
+    "dev": "fastify start -w -l info -P app.js -p 4001",
     "docker:build": "docker build -t fastify-api .",
-    "docker:run": "docker run --rm -p 3000:3000 fastify-api"
+    "docker:run": "docker run --rm -p 4001:4001 fastify-api"
   },
   "keywords": [],
   "author": "",
