@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  settings-api:
+    build: ./fastify/
+    ports:
+      - "4001:4001"
+
+  dice-api:
+    build: ./nest/
+    ports:
+      - "4002:4002"
+
+  gateway-api:
+    build: ./express/
+    ports:
+      - "4003:4003"
+    environment:
+      - DICE_API_URL=http://dice-api:4002
+      - SETTINGS_API_URL=http://settings-api:4001
