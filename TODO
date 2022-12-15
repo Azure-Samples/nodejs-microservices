@@ -1,6 +1,9 @@
 # TODO solution
 - [ ] CosmosDB
-- [ ] Bicep + scripts
+- [ ] Bicep
+  - [ ] update setup script
+  - [ ] update build script
+  - [ ] update deploy script
 - [ ] GitHub Actions deployment
 
 # Workshop
