@@ -47,7 +47,7 @@ GET {{dice_api_host}}/rolls/history?max=8&sides=6
 ##################################################################
 
 # Update user settings
-PUT {{gateway_host}}/settings
+PUT {{gateway_host}}/api/settings
 content-type: application/json
 x-ms-client-principal: {{client_principal}}
 
@@ -56,13 +56,13 @@ x-ms-client-principal: {{client_principal}}
 ###
 
 # Get user settings
-GET {{gateway_host}}/settings
+GET {{gateway_host}}/api/settings
 x-ms-client-principal: {{client_principal}}
 
 ###
 
 # Roll dice
-POST {{gateway_host}}/rolls
+POST {{gateway_host}}/api/rolls
 content-type: application/json
 x-ms-client-principal: {{client_principal}}
 
@@ -71,5 +71,5 @@ x-ms-client-principal: {{client_principal}}
 ###
 
 # Get roll history
-GET {{gateway_host}}/rolls/history?max=10
+GET {{gateway_host}}/api/rolls/history?max=10
 x-ms-client-principal: {{client_principal}}
