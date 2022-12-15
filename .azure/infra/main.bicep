@@ -30,7 +30,7 @@ var commonTags = {
 
 targetScope = 'resourceGroup'
 
-module logs './logs.bicep' = {
+module logs './modules/logs.bicep' = {
   name: 'logs'
   scope: resourceGroup()
   params: {
@@ -41,7 +41,7 @@ module logs './logs.bicep' = {
   }
 }
 
-module registry './registry.bicep' = {
+module registry './modules/registry.bicep' = {
   name: 'registry'
   scope: resourceGroup()
   params: {
@@ -58,7 +58,7 @@ var containerImageNames = [
   'fastify-api'
 ]
 
-module containers './container.bicep' = [for imageName in containerImageNames: {
+module containers './modules/container.bicep' = [for imageName in containerImageNames: {
   name: 'container-${imageName}'
   scope: resourceGroup()
   params: {
@@ -71,6 +71,22 @@ module containers './container.bicep' = [for imageName in containerImageNames: {
   dependsOn: [logs, registry]
 }]
 
+var websiteNames = [
+  'website'
+]
+
+module websites './modules/website.bicep' = [for name in websiteNames: {
+  name: 'website-${name}'
+  scope: resourceGroup()
+  params: {
+    projectName: projectName
+    environment: environment
+    location: location
+    tags: commonTags
+  }
+}]
+
+
 output resourceGroupName string = resourceGroup().name
 
 output logsWorkspaceName string = logs.outputs.logsWorkspaceName
@@ -82,3 +98,7 @@ output registryServer string = registry.outputs.registryServer
 output containerImageNames array = containerImageNames
 output containerAppNames array = [for (name, i) in containerImageNames: containers[i].outputs.containerName]
 output containerAppUrls array = [for (name, i) in containerImageNames: containers[i].outputs.containerUrl]
+
+output websiteNames array = websiteNames
+output staticWebAppNames array = [for (name, i) in websiteNames: websites[i].outputs.staticWebAppName]
+output staticWebAppPublicUrls array = [for (name, i) in websiteNames: websites[i].outputs.staticWebAppPublicUrl]

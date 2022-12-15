@@ -52,7 +52,7 @@ resource containerEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' = {
       destination: 'log-analytics'
       logAnalyticsConfiguration: {
         customerId: logsWorkspace.properties.customerId
-        sharedKey: listKeys(logsWorkspace.id, '2021-06-01').primarySharedKey  // TODO: use key vault
+        sharedKey: listKeys(logsWorkspace.id, '2021-06-01').primarySharedKey
       }
     }
     // zoneRedundant: false
