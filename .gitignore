@@ -12,6 +12,3 @@ lerna-debug.log*
 
 # OS
 .DS_Store
-
-# Infra
-.azure/*.env
