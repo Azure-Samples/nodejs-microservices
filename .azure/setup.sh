@@ -3,7 +3,7 @@
 # Usage: ./setup.sh <project_name> [environment_name] [location] [options]
 # Setup the current GitHub repo for deploying on Azure.
 ##############################################################################
-# Dependencies: Azure CLI, GitHub CLI, jq
+# v1.0.1 | dependencies: Azure CLI, GitHub CLI, jq
 ##############################################################################
 
 set -e
@@ -53,14 +53,14 @@ while [ $# -gt 0 ]; do
       exit 1
       ;;
     *)
-      # save positional arg
+      # Save positional arg
       args+=("$1")
       shift
       ;;
   esac
 done
 
-# restore positional args
+# Restore positional args
 set -- "${args[@]}"
 
 project_name="${1:-$project_name}"
@@ -131,7 +131,7 @@ else
     )
   echo "Creating Azure service principal..."
   service_principal=$(
-    az ad sp create-for-rbac \
+    MSYS_NO_PATHCONV=1 az ad sp create-for-rbac \
       --name="sp-${project_name}" \
       --role="Contributor" \
       --scopes="/subscriptions/$subscription_id" \

@@ -53,9 +53,9 @@ module registry './modules/registry.bicep' = {
 }
 
 var containerImageNames = [
-  'nest-api'
-  'express-api'
-  'fastify-api'
+  'settings-api'
+  'dice-api'
+  'gateway-api'
 ]
 
 module containers './modules/container.bicep' = [for imageName in containerImageNames: {
@@ -85,7 +85,6 @@ module websites './modules/website.bicep' = [for name in websiteNames: {
     tags: commonTags
   }
 }]
-
 
 output resourceGroupName string = resourceGroup().name
 

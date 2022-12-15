@@ -20,19 +20,21 @@ cd ..
 
 # TODO: get src folders and build commands from yaml
 
-echo "Building 'nest-api'..."
-pushd nest
-npm run docker:build
-popd
+echo "Building 'root'..."
+npm run docker:build --workspaces
 
-echo "Building 'express-api'..."
-pushd express
-npm run docker:build
-popd
+# echo "Building 'nest-api'..."
+# pushd nest
+# popd
 
-echo "Building 'fastify-api'..."
-pushd fastify
-npm run docker:build
-popd
+# echo "Building 'express-api'..."
+# pushd express
+# npm run docker:build
+# popd
+
+# echo "Building 'fastify-api'..."
+# pushd fastify
+# npm run docker:build
+# popd
 
 echo "Build complete for project '${project_name}'."

@@ -3,7 +3,8 @@
 # Usage: ./deploy.sh <environment_name>
 # Deploys the Azure resources for this project.
 ##############################################################################
-# Dependencies: Azure CLI, Docker CLI, jq
+# v0.1.0 | dependencies: Azure CLI, Azure Functions Core Tools, Docker CLI,
+#                        Azure Static Web Apps CLI, jq
 ##############################################################################
 
 set -e
@@ -29,6 +30,20 @@ commit_sha="$(git rev-parse HEAD)"
 
 az config set extension.use_dynamic_install=yes_without_prompt
 cd ..
+
+# Deploy function apps
+for i in ${!function_names[@]}; do
+  function_app_name=${function_app_names[$i]}
+  function_app_url=${function_app_urls[$i]}
+
+  echo "Deploying function app '${function_app_name}'..."
+  pushd ${function_names[$i]}
+
+  # TODO: retreive remote settings
+
+  func azure functionapp publish ${function_app_name} --javascript
+  popd
+done
 
 # Deploy container apps
 for i in ${!container_image_names[@]}; do

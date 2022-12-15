@@ -3,7 +3,7 @@
 # Usage: ./infra.sh <command> <project_name> [environment_name] [location]
 # Manages the Azure infrastructure for this project.
 ##############################################################################
-# Dependencies: Azure CLI, jq, perl
+# v0.9.1 | dependencies: Azure CLI, jq, perl
 ##############################################################################
 
 set -e
@@ -131,7 +131,7 @@ retrieveSecrets() {
         --query "username" \
         --output tsv \
       )
-    echo "registry_username=${registry_username}" >> ${env_file}
+    echo "registry_username='${registry_username}'" >> ${env_file}
 
     registry_password=$( \
       az acr credential show \
@@ -139,7 +139,41 @@ retrieveSecrets() {
         --query "passwords[0].value" \
         --output tsv \
       )
-    echo "registry_password=${registry_password}" >> ${env_file}
+    echo "registry_password='${registry_password}'" >> ${env_file}
+  fi
+
+  # Get storage account connection string
+  if [ ! -z "$storage_account_name" ]; then
+    storage_account_connection_string=$( \
+      az storage account show-connection-string \
+        --name ${storage_account_name} \
+        --query "connectionString" \
+        --output tsv \
+      )
+    echo "storage_account_connection_string='${storage_account_connection_string}'" >> ${env_file}
+  fi
+
+  # Get app insights instrumentation key and connection string
+  if [ ! -z "$app_insights_name" ]; then
+    app_insights_instrumentation_key=$( \
+      az resource show \
+        --resource-group ${resource_group_name} \
+        --resource-type "Microsoft.Insights/components" \
+        --name ${app_insights_name} \
+        --query properties.InstrumentationKey \
+        --output tsv \
+      )
+    echo "app_insights_instrumentation_key='${app_insights_instrumentation_key}'" >> ${env_file}
+
+    app_insights_connection_string=$( \
+      az resource show \
+        --resource-group ${resource_group_name} \
+        --resource-type "Microsoft.Insights/components" \
+        --name ${app_insights_name} \
+        --query properties.ConnectionString \
+        --output tsv \
+      )
+    echo "app_insights_connection_string='${app_insights_connection_string}'" >> ${env_file}
   fi
 
   # TODO: retrieve other secrets (swa tokens, connection strings, etc.)
