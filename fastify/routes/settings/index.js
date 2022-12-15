@@ -10,7 +10,7 @@ module.exports = async function (fastify, opts) {
       body: {
         type: 'object',
         properties: {
-          diceFaces: { type: 'number' }
+          sides: { type: 'number' }
         }
       }
     }
@@ -19,13 +19,13 @@ module.exports = async function (fastify, opts) {
     request.log.info(`Saving settings for user ${request.params.userId}`);
     await fastify.db.saveSettings(request.params.userId, request.body);
     reply.code(204);
-  })
+  });
 
   fastify.get('/:userId', async function (request, reply) {
     const settings = await fastify.db.getSettings(request.params.userId);
     if (settings) {
       return settings;
     }
-    reply.code(404);
-  })
+    return { sides: 6 };
+  });
 }

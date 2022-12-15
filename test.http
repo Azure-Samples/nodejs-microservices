@@ -1,0 +1,75 @@
+##################################################################
+# VS Code with REST Client extension is needed to use this file.
+# Download at: https://aka.ms/vscode/rest-client
+##################################################################
+
+@settings_api_host = http://localhost:4001
+@dice_api_host = http://localhost:4002
+@gateway_host = http://localhost:4003
+@user_id = test123
+
+# Base64 of { "userDetails": "test123" }
+# You can use https://www.base64encode.org/ to generate your own
+@client_principal = eyAidXNlckRldGFpbHMiOiAidGVzdDEyMyIgfQ==
+
+##################################################################
+# Settings API
+##################################################################
+
+# Update user settings
+PUT {{settings_api_host}}/settings/{{user_id}}
+content-type: application/json
+
+{ "sides": 12 }
+
+###
+
+# Get user settings
+GET {{settings_api_host}}/settings/{{user_id}}
+
+##################################################################
+# Dice API
+##################################################################
+
+# Roll dice
+POST {{dice_api_host}}/rolls
+content-type: application/json
+
+{ "sides": 6 }
+
+###
+
+# Get roll history
+GET {{dice_api_host}}/rolls/history?max=8&sides=6
+
+##################################################################
+# Gateway API
+##################################################################
+
+# Update user settings
+PUT {{gateway_host}}/settings
+content-type: application/json
+x-ms-client-principal: {{client_principal}}
+
+{ "sides": 8 }
+
+###
+
+# Get user settings
+GET {{gateway_host}}/settings
+x-ms-client-principal: {{client_principal}}
+
+###
+
+# Roll dice
+POST {{gateway_host}}/rolls
+content-type: application/json
+x-ms-client-principal: {{client_principal}}
+
+{ "count": 10 }
+
+###
+
+# Get roll history
+GET {{gateway_host}}/rolls/history?max=10
+x-ms-client-principal: {{client_principal}}

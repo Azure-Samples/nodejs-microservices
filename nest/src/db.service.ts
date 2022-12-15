@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 export interface Roll {
-  diceFaces: number;
+  sides: number;
   result: number;
   timestamp: number;
 }
@@ -10,10 +10,10 @@ export interface Roll {
 export class DbService {
   private mockDb: Roll[] = [];
 
-  async getLastRolls(max: number, diceFaces: number) {
+  async getLastRolls(max: number, sides: number) {
     await this.delay();
     return this.mockDb
-      .filter((roll) => roll.diceFaces === diceFaces)
+      .filter((roll) => roll.sides === sides)
       .slice(-max);
   }
 

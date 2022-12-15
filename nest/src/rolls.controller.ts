@@ -7,11 +7,11 @@ export class RollsController {
   constructor(private readonly logger: Logger, private db: DbService) {}
 
   @Post()
-  async rollDice(@Body() body: { diceFaces: number }) {
-    this.logger.log(`Rolling dice [${body.diceFaces}]}`);
-    const result = Math.ceil(Math.random() * body.diceFaces);
+  async rollDice(@Body() body: { sides: number }) {
+    this.logger.log(`Rolling dice [${body.sides}]}`);
+    const result = Math.ceil(Math.random() * body.sides);
     await this.db.addRoll({
-      diceFaces: body.diceFaces,
+      sides: body.sides,
       timestamp: Date.now(),
       result,
     });
@@ -21,9 +21,9 @@ export class RollsController {
   @Get('history')
   async getHistory(@Query() query) {
     const max = query.max ? Number(query.max) : 10;
-    const diceFaces = query.diceFaces ? Number(query.diceFaces) : 6;
+    const sides = query.sides ? Number(query.sides) : 6;
     this.logger.log(`Retrieving last ${max} rolls history`);
-    const rolls = await this.db.getLastRolls(max, diceFaces);
+    const rolls = await this.db.getLastRolls(max, sides);
     return { result: rolls.map((roll) => roll.result) };
   }
 }
