@@ -3,8 +3,8 @@
   "configurations": {
     "website": {
       "appLocation": ".",
-      "apiLocation": "remote",
-      "outputLocation": "packages/website/dist",
+      "apiLocation": "__dummy",
+      "outputLocation": "dist",
       "run": "npm run dev",
       "appBuildCommand": "npm run build",
       "appDevserverUrl": "http://localhost:5173",
