@@ -1,0 +1,14 @@
+{
+  "$schema": "https://aka.ms/azure/static-web-apps-cli/schema",
+  "configurations": {
+    "website": {
+      "appLocation": ".",
+      "apiLocation": "remote",
+      "outputLocation": "packages/website/dist",
+      "run": "npm run dev",
+      "appBuildCommand": "npm run build",
+      "appDevserverUrl": "http://localhost:5173",
+      "apiDevserverUrl": "http://localhost:4003"
+    }
+  }
+}

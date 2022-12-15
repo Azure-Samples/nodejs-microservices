@@ -1,0 +1,22 @@
+{
+  "name": "azure-nodejs-microservices-workshop",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "swa start",
+    "dev": "concurrently npm:dev:* --kill-others",
+    "dev:website": "npm run dev --workspace=website",
+    "dev:services": "docker-compose up",
+    "build": "npm run build --workspaces --if-present",
+    "docker:build": "npm run build --workspaces --if-present"
+  },
+  "author": "",
+  "license": "MIT",
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "@azure/static-web-apps-cli": "^1.0.3",
+    "concurrently": "^7.6.0"
+  }
+}

@@ -1,17 +1,17 @@
 version: "3.9"
 services:
   settings-api:
-    build: ./settings-api/
+    build: ./packages/settings-api/
     ports:
       - "4001:4001"
 
   dice-api:
-    build: ./dice-api/
+    build: ./packages/dice-api/
     ports:
       - "4002:4002"
 
   gateway-api:
-    build: ./gateway-api/
+    build: ./packages/gateway-api/
     ports:
       - "4003:4003"
     environment:
