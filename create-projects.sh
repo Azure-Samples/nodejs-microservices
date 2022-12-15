@@ -4,6 +4,9 @@
 # Creates the projects folders.
 ##############################################################################
 
-npx @nestjs/cli new nest
-npx express-generator --no-view express
-npx fastify-cli generate fastify
+mkdir packages/
+cd packages
+npx @nestjs/cli new dice-api
+npx express-generator --no-view gateway-api
+npx fastify-cli generate settings-api
+npm create vite@latest website -- --template vanilla
