@@ -1,4 +1,4 @@
-# azure-nodejs-microservices-workshop
+# azure-nodejs-microservices
 
 <!--
 ## Architecture
