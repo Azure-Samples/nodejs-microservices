@@ -1,17 +1,17 @@
 version: "3.9"
 services:
   settings-api:
-    build: ./fastify/
+    build: ./settings-api/
     ports:
       - "4001:4001"
 
   dice-api:
-    build: ./nest/
+    build: ./dice-api/
     ports:
       - "4002:4002"
 
   gateway-api:
-    build: ./express/
+    build: ./gateway-api/
     ports:
       - "4003:4003"
     environment:
