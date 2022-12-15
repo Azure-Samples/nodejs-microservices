@@ -1,0 +1,119 @@
+# TODO solution
+- [ ] CosmosDB
+- [ ] Bicep + scripts
+- [ ] GitHub Actions deployment
+
+# Workshop
+- [x] Simple website to push/get requests with auth [SWA]
+- [ ] CosmosDB to store results
+<!-- - [ ] Event Grid to pass events -->
+<!-- - [ ] Azure Function to process events and store in DB -->
+- [x] Microservices problems
+  * 3 services:
+    - API gateway - N Dice Rolls
+    - Dice Rolls API - DB / APIs: new roll dice / get last N rolls - DB
+    - Settings API - Store User<>Dice Faces preferences - DB
+  <!-- * [ ] Service to service communication/auth -->
+  * Service discovery
+  * Load balancing / scaling
+  * Monitoring
+  * Logging/Tracing
+
+- [x] website
+  * [x] Login
+  * [x] Set dice type preference
+  * [x] Roll N dices and show results / time
+  * [x] Show last N rolls
+
+# Plan
+
+0. Setup
+  - VSCode
+  - Docker
+  - devcontainer (Node, Azure CLI, Bicep, Extensions)
+  - install nest/fastify/express CLIs
+  - github account (azure later!)
+
+1. Intro
+  - goal
+  - architecture (+ détaillée avec services azure en vrai)
+
+             (express)         (nestjs)
+  webapp -> API Gateway |--> Dice rolls API ---------> CosmosDB
+                        |    
+                        |--> Settings API -----------> CosmosDB
+                             (fastify + az sdk)
+  - explain basics SWA (+auth) + Containers (ACA)
+
+2. UserSettings API (fastify)
+  - create mock DB and service (in memory + simulated delay)
+  - PUT /settings/{user_id} { dice_faces: 6 }
+  - GET /settings/{user_id}
+  - test with REST client/curl
+  - Dockerfile
+  - test
+
+3. Dice API (nestjs)
+  - create mock DB and service (in memory + simulated delay)
+  - POST /rolls { dice_faces: } => { result: 4 } + store in DB (w/ date + faces)
+  - GET  /rolls/history?count=50&dice_faces=6 => { result: [2, 4, 6] }
+  - test with REST client/curl
+  - Dockerfile with Docker build
+  - test
+
+4. API Gateway (express)
+  - need auth header with user_id (from SWA) => middleware
+  - PUT /settings/
+  - GET /settings/
+  - POST /rolls { count: 100 } => get settings + N calls to Dice API
+    => { result: 4, duration: XX (in ms) }
+  - GET  /rolls/history?count=50 => get settings + call to Dice API
+    => { result: [2, 4, 6] }
+  - test with REST client/curl
+  - Dockerfile
+  - Docker compose to run all yml
+  - test
+
+5. WebApp (pure HTML/JS) with ugly/no CSS :)
+  - Start from template!
+  - Introduce SWA + CLI
+  - Connect auth for github login
+  - Set dice type preference (call PUT /settings)
+  - Roll N dices and show results / time
+  - Show last N rolls
+
+6. Creating Azure Infra
+  - Setup azure account
+  - Explain SWA / ACR / ACA / CosmosDB
+  - Explain IaC / Bicep
+  - Use provided Bicep templates + AZ CLI command to create infra
+  - Explain some of the setup: gateway public, other microservices private, SWA API proxy...
+
+7. Connect Cosmos Databases
+  - provide connection string in env + adapt code for Settings API
+  - provide connection string in env + adapt code for Dice API
+  - test locally
+  - look in data explorer
+
+8. Deploy with CI/CD
+  - Explain GitHub actions
+  - Create Azure SP + add secrets
+  - Create GHA workflow
+  - Deploy
+  - test
+
+9. Monitoring and scaling
+  - Create dashboard cpu/memory
+  - test with 100, 1k, 10k rolls -> view graphs
+  - review ACA scaling rules -> change with AZ CLI
+  - test again -> view graphs
+
+10. Logging and tracing
+  - connect to Dice API logs with AZ CLI
+  - explain app/system logs
+  - explain why tracing (N calls, from which request?)
+  - create log analytics request to trace all requests from api gateway call
+
+11. conclusion!
+  - clean up infra
+
