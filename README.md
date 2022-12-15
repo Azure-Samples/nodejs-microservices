@@ -1,13 +1,9 @@
 # azure-nodejs-microservices
 
-<!--
 ## Architecture
 
-![Application architecture](./docs/architecture.svg)
--->
-
-## Pre-requisites
-
+<!-- can be edited with https://draw.io -->
+![Application architecture](./docs/architecture.drawio.png)
 
 ## How to run locally
 
