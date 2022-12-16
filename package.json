@@ -2,6 +2,7 @@
   "name": "azure-nodejs-microservices",
   "version": "1.0.0",
   "description": "",
+  "private": true,
   "scripts": {
     "start": "concurrently npm:app:* --kill-others",
     "app:services": "docker-compose up",
