@@ -44,7 +44,7 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2022-02-01-pr
 // Azure Container Environment
 // https://docs.microsoft.com/azure/templates/microsoft.app/managedenvironments?tabs=bicep
 resource containerEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' = {
-  name: 'ce-${projectName}-${environment}-${uid}'
+  name: 'cae-${projectName}-${environment}-${uid}'
   location: location
   tags: tags
   properties: {
