@@ -4,9 +4,9 @@
 # ------------------------------------
 FROM node:18-alpine as build
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --cache /tmp/empty-cache
-COPY . ./
+COPY ./package*.json ./
+COPY ./packages/dice-api ./packages/dice-api
+RUN npm ci --workspace=dice-api --cache /tmp/empty-cache
 RUN npm run build
 
 # Run Node.js app
@@ -15,8 +15,9 @@ FROM node:18-alpine
 ENV NODE_ENV=production
 
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production --cache /tmp/empty-cache
-COPY --from=build app/dist dist
+COPY ./package*.json ./
+COPY ./packages/dice-api/package.json ./packages/dice-api/
+RUN npm ci --omit=dev --workspace=dice-api --cache /tmp/empty-cache
+COPY --from=build app/packages/dice-api/dist packages/dice-api/dist
 EXPOSE 4002
-CMD [ "node", "dist/main" ]
+CMD [ "node", "packages/dice-api/dist/main" ]

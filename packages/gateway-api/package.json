@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "docker:build": "docker build -t express-api .",
+    "docker:build": "docker build --tag gateway-api --file ./Dockerfile ../..",
     "docker:run": "docker run --rm -p 4003:4003 gateway-api"
   },
   "dependencies": {

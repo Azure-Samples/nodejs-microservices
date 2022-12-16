@@ -10,7 +10,7 @@
     "test": "tap \"test/**/*.test.js\"",
     "start": "fastify start -l info app.js -p 4001",
     "dev": "fastify start -w -l info -P app.js -p 4001",
-    "docker:build": "docker build -t fastify-api .",
+    "docker:build": "docker build --tag settings-api --file ./Dockerfile ../..",
     "docker:run": "docker run --rm -p 4001:4001 settings-api"
   },
   "keywords": [],

@@ -1,17 +1,23 @@
 version: "3.9"
 services:
   settings-api:
-    build: ./packages/settings-api/
+    build:
+      context: .
+      dockerfile: ./packages/settings-api/Dockerfile
     ports:
       - "4001:4001"
 
   dice-api:
-    build: ./packages/dice-api/
+    build:
+      context: .
+      dockerfile: ./packages/dice-api/Dockerfile
     ports:
       - "4002:4002"
 
   gateway-api:
-    build: ./packages/gateway-api/
+    build:
+      context: .
+      dockerfile: ./packages/gateway-api/Dockerfile
     ports:
       - "4003:4003"
     environment:
