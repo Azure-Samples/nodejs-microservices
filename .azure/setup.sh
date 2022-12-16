@@ -3,12 +3,12 @@
 # Usage: ./setup.sh <project_name> [environment_name] [location] [options]
 # Setup the current GitHub repo for deploying on Azure.
 ##############################################################################
-# v1.0.1 | dependencies: Azure CLI, GitHub CLI, jq
+# v1.0.2 | dependencies: Azure CLI, GitHub CLI, jq
 ##############################################################################
 
 set -e
 cd $(dirname ${BASH_SOURCE[0]})
-if [ -f ".settings" ]; then
+if [[ -f ".settings" ]]; then
   source .settings
 fi
 
@@ -29,7 +29,7 @@ terminate=false
 ci_login=false
 args=()
 
-while [ $# -gt 0 ]; do
+while [[ $# -gt 0 ]]; do
   case $1 in
     -s|--skip-login)
       skip_login=true
@@ -73,9 +73,9 @@ if ! command -v az &> /dev/null; then
   exit 1
 fi
 
-if [ "$ci_login" = true ]; then
+if [[ "$ci_login" = true ]]; then
   echo "Logging in to Azure using \$AZURE_CREDENTIALS..."
-  if [ -z "${AZURE_CREDENTIALS}" ]; then
+  if [[ -z "${AZURE_CREDENTIALS}" ]]; then
     echo "Azure credentials not found."
     echo "Please run .azure/setup.sh locally to setup your deployment."
     exit 1
@@ -100,13 +100,13 @@ if ! command -v gh &> /dev/null; then
   exit 1
 fi
 
-if [ -z "$project_name" ]; then
+if [[ -z "$project_name" ]]; then
   showUsage
   echo "Error: project name is required."
   exit 1
 fi
 
-if [ "$skip_login" = false ]; then
+if [[ "$skip_login" = false ]]; then
   echo "Logging in to Azure..."
   az login
   echo "Logging in to GitHub..."
@@ -114,7 +114,7 @@ if [ "$skip_login" = false ]; then
   echo "Login successful."
 fi
 
-if [ "$terminate" = true ]; then
+if [[ "$terminate" = true ]]; then
   echo "Deleting current setup..."
   .azure/infra.sh down ${project_name} ${environment} ${location}
   echo "Retrieving GitHub repository URL..."

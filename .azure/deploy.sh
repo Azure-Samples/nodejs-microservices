@@ -3,20 +3,20 @@
 # Usage: ./deploy.sh <environment_name>
 # Deploys the Azure resources for this project.
 ##############################################################################
-# v0.1.0 | dependencies: Azure CLI, Azure Functions Core Tools, Docker CLI,
+# v0.1.1 | dependencies: Azure CLI, Azure Functions Core Tools, Docker CLI,
 #                        Azure Static Web Apps CLI, jq
 ##############################################################################
 
 set -e
 cd $(dirname ${BASH_SOURCE[0]})
-if [ -f ".settings" ]; then
+if [[ -f ".settings" ]]; then
   source .settings
 fi
 
 environment="${environment:-prod}"
 environment="${1:-$environment}"
 
-if [ ! -f ".${environment}.env" ]; then
+if [[ ! -f ".${environment}.env" ]]; then
   echo "Error: file '.${environment}.env' not found."
   exit 1
 fi
@@ -51,10 +51,6 @@ for i in ${!container_image_names[@]}; do
   container_app_name=${container_app_names[$i]}
   container_app_url=${container_app_urls[$i]}
 
-  # echo "Building '${container_app_name}'..."
-  # TODO: get src folder and build command from yaml
-  # npm run docker:build
-
   echo "Deploying '${container_app_name}'..."
   echo ${registry_password} | docker login \
     --username ${registry_username} \
@@ -85,7 +81,7 @@ for i in ${!static_web_app_names[@]}; do
   echo "Building '${static_web_app_name}'..."
 
   # TODO: get src folder and build process from yaml
-  pushd ${static_web_app_name}
+  pushd packages/${static_web_app_name}
   npm install
   npm run build
 
@@ -101,7 +97,7 @@ for i in ${!static_web_app_names[@]}; do
   
   # Not working at the moment for Next.js preview
   swa deploy \
-    --output-location ".next" \
+    # --output-location "." \
     --app-name "${static_web_app_name}" \
     --resource-group "${resource_group_name}" \
     --tenant-id "${tenant_id}" \

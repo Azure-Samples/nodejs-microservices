@@ -3,12 +3,12 @@
 # Usage: ./infra.sh <command> <project_name> [environment_name] [location]
 # Manages the Azure infrastructure for this project.
 ##############################################################################
-# v0.9.1 | dependencies: Azure CLI, jq, perl
+# v0.9.2 | dependencies: Azure CLI, jq, perl
 ##############################################################################
 
 set -e
 cd $(dirname ${BASH_SOURCE[0]})
-if [ -f ".settings" ]; then
+if [[ -f ".settings" ]]; then
   source .settings
 fi
 
@@ -124,7 +124,7 @@ retrieveSecrets() {
   echo -e "\n${secrets_sep}\n" >> ${env_file}
 
   # Get registry credentials
-  if [ ! -z "$registry_name" ]; then
+  if [[ -n "$registry_name" ]]; then
     registry_username=$( \
       az acr credential show \
         --name ${registry_name} \
@@ -143,7 +143,7 @@ retrieveSecrets() {
   fi
 
   # Get storage account connection string
-  if [ ! -z "$storage_account_name" ]; then
+  if [[ -n "$storage_account_name" ]]; then
     storage_account_connection_string=$( \
       az storage account show-connection-string \
         --name ${storage_account_name} \
@@ -154,7 +154,7 @@ retrieveSecrets() {
   fi
 
   # Get app insights instrumentation key and connection string
-  if [ ! -z "$app_insights_name" ]; then
+  if [[ -n "$app_insights_name" ]]; then
     app_insights_instrumentation_key=$( \
       az resource show \
         --resource-group ${resource_group_name} \
@@ -181,7 +181,7 @@ retrieveSecrets() {
   echo "Secrets for environment '${environment}' saved to '${env_file}'."
 }
 
-if [ -z "$project_name" ]; then
+if [[ -z "$project_name" ]]; then
   showUsage
   echo "Error: project name is required."
   exit 1
