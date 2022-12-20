@@ -1,5 +1,10 @@
 # azure-nodejs-microservices
 
+## Prerequisites
+
+- Node.js 18+
+- Docker
+
 ## Architecture
 
 <!-- can be edited with https://draw.io -->
