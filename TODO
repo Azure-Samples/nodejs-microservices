@@ -1,10 +1,15 @@
 # TODO solution
+- [x] Feedback npm CI with docker + npm workspaces
 - [ ] CosmosDB
+- [ ] Add correlation ID in logs
 - [ ] Bicep
   - [ ] update setup script
   - [ ] update build script
   - [ ] update deploy script
 - [ ] GitHub Actions deployment
+- [ ] devcontainer with vscode extensions
+- [ ] secrets bash array with newlines
+- [ ] bash strict mode
 
 # Workshop
 - [x] Simple website to push/get requests with auth [SWA]
@@ -119,4 +124,3 @@
 
 11. conclusion!
   - clean up infra
-
