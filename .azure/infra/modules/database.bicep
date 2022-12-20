@@ -22,6 +22,13 @@ param tags object = {}
 // Resource-specific parameters
 // ---------------------------------------------------------------------------
 
+@description('Specify the database type')
+@allowed([
+  'CoreSQL'
+  'MongoDB'
+])
+param databaseType string = 'CoreSQL'
+
 // Resource-specific parameters
 param collections array = []
 

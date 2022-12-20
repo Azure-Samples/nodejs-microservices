@@ -1,15 +1,25 @@
 'use strict'
 
 const fp = require('fastify-plugin')
+const { CosmosClient } = require("@azure/cosmos");
 
 // the use of fastify-plugin is required to be able
 // to export the decorators to the outer scope
 
 module.exports = fp(async function (fastify, opts) {
-  fastify.decorate('db', new MockDB());
-})
+  const connectionString = process.env.COSMOS_CONNECTION_STRING;
+  if (connectionString) {
+    const db = new Database(connectionString);
+    await db.init();
+    fastify.decorate('db', db);
+    fastify.log.info('Connection to database successful.');
+  } else {
+    fastify.decorate('db', new MockDatabase());
+    fastify.log.warn('No DB connection string provided, using mock database.');
+  }
+});
 
-class MockDB {
+class MockDatabase {
   constructor() {
     this.db = {};
   }
@@ -26,5 +36,30 @@ class MockDB {
 
   async #delay() {
     return new Promise(resolve => setTimeout(resolve, 10));
+  }
+}
+
+class Database {
+  constructor(connectionString) {
+    this.client = new CosmosClient(connectionString)
+  }
+
+  async init() {
+    const { database } = await this.client.databases.createIfNotExists({
+      id: 'settings-db'
+    });
+    const { container } = await database.containers.createIfNotExists({
+      id: 'settings'
+    });
+    this.settings = container;
+  }
+
+  async saveSettings(userId, settings) {
+    this.settings.items.upsert({ id: userId, settings });
+  }
+  
+  async getSettings(userId) {
+    const { resource } = await this.settings.item(userId).read();
+    return resource?.settings;
   }
 }
