@@ -16,10 +16,9 @@
 		"ghcr.io/devcontainers/features/github-cli:1": {}
 	},
 
-	// Use this environment variable if you need to bind mount your local source code into a new container.
-	"remoteEnv": {
-		"LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
-	},
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [4280],
+
 	"customizations": {
 		"vscode": {
 			"extensions": [
