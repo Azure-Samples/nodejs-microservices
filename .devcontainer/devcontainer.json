@@ -7,13 +7,13 @@
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
-		"ghcr.io/devcontainers/features/docker-from-docker:1": {
+		"ghcr.io/devcontainers/features/docker-in-docker:1": {
 			"version": "latest",
-			"enableNonRootDocker": "true",
-			"moby": "false"
+			"moby": "false",
+			"dockerDashComposeVersion": "v2"
 		},
-		"ghcr.io/devcontainers/features/node:1": {},
-		"ghcr.io/devcontainers/features/azure-cli:1": {}
+		"ghcr.io/devcontainers/features/azure-cli:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {}
 	},
 
 	// Use this environment variable if you need to bind mount your local source code into a new container.
