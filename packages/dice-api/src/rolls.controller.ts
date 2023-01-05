@@ -1,10 +1,11 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { Logger } from 'nestjs-pino';
+import { Body, Controller, Get, Post, Query, Logger } from '@nestjs/common';
 import { DbService } from './db.service';
 
 @Controller('rolls')
 export class RollsController {
-  constructor(private readonly logger: Logger, private db: DbService) {}
+  private readonly logger = new Logger(DbService.name);
+
+  constructor(private readonly db: DbService) {}
 
   @Post()
   async rollDice(@Body() body: { sides: number }) {
