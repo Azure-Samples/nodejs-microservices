@@ -1,4 +1,5 @@
 {
+  "type": "module",
   "name": "settings-api",
   "version": "1.0.0",
   "description": "This project was bootstrapped with Fastify-CLI.",
@@ -25,6 +26,14 @@
     "fastify-plugin": "^4.0.0"
   },
   "devDependencies": {
-    "tap": "^16.1.0"
+    "tap": "^16.1.0",
+    "@istanbuljs/esm-loader-hook": "0.2.0"
+  },
+  "tap": {
+    "node-arg": [
+      "--no-warnings",
+      "--experimental-loader",
+      "@istanbuljs/esm-loader-hook"
+    ]
   }
 }

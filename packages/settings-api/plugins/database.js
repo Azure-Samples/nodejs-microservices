@@ -1,12 +1,10 @@
-'use strict'
-
-const fp = require('fastify-plugin')
-const { CosmosClient } = require("@azure/cosmos");
+import fp from 'fastify-plugin'
+import { CosmosClient } from '@azure/cosmos';
 
 // the use of fastify-plugin is required to be able
 // to export the decorators to the outer scope
 
-module.exports = fp(async function (fastify, opts) {
+export default fp(async function (fastify, opts) {
   const connectionString = process.env.COSMOS_CONNECTION_STRING;
   if (connectionString) {
     const db = new Database(connectionString);
@@ -55,7 +53,7 @@ class Database {
   }
 
   async saveSettings(userId, settings) {
-    this.settings.items.upsert({ id: userId, settings });
+    await this.settings.items.upsert({ id: userId, settings });
   }
   
   async getSettings(userId) {

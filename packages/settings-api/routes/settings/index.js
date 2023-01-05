@@ -1,6 +1,4 @@
-'use strict'
-
-module.exports = async function (fastify, opts) {
+export default async function (fastify, opts) {
   /**
    * @type {import('fastify').RouteShorthandOptions}
    * @const
