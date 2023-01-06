@@ -29,24 +29,24 @@ cd ..
 # echo "Building 'root'..."
 # npm run docker:build --workspaces
 
-# Build container apps
-for i in ${!container_image_names[@]}; do
-  container_image_name=${container_image_names[$i]}
+# Build containers
+for i in ${!container_names[@]}; do
+  container_image_name=${container_names[$i]}
 
   # TODO: get src folders and build commands from yaml
-  echo "Building '$container_image_name'..."
-  pushd packages/$container_image_name
+  echo "Building '$container_name'..."
+  pushd packages/$container_name
   npm run docker:build
   popd
 done
 
-# Build static web apps
-for i in ${!static_web_app_names[@]}; do
-  static_web_app_name=${static_web_app_names[$i]}
+# Build websites
+for i in ${!websiteNames[@]}; do
+  website_name=${websiteNames[$i]}
 
   # TODO: get src folders and build commands from yaml
-  echo "Building '$static_web_app_name'..."
-  pushd packages/$static_web_app_name
+  echo "Building '$website_name'..."
+  pushd packages/$website_name
   npm run build
   popd
 
