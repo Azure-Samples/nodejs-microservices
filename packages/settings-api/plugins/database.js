@@ -5,7 +5,7 @@ import { CosmosClient } from '@azure/cosmos';
 // to export the decorators to the outer scope
 
 export default fp(async function (fastify, opts) {
-  const connectionString = process.env.COSMOS_CONNECTION_STRING;
+  const connectionString = process.env.DATABASE_CONNECTION_STRING;
   if (connectionString) {
     const db = new Database(connectionString);
     await db.init();

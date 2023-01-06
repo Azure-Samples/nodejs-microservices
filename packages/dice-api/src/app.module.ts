@@ -14,7 +14,7 @@ import { RollsController } from './rolls.controller';
       provide: DbService,
       useFactory: async () => {
         const logger = new Logger(DbService.name);
-        const connectionString = process.env.COSMOS_CONNECTION_STRING;
+        const connectionString = process.env.DATABASE_CONNECTION_STRING;
         if (connectionString) {
           const db = new DbService(connectionString);
           await db.init();
