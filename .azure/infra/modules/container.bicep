@@ -25,6 +25,8 @@ param tags object = {}
 @description('The name of the image to deploy')
 param imageName string
 
+// TODO: CPU/memory resources, ingress, env
+
 // ---------------------------------------------------------------------------
 
 var uid = uniqueString(resourceGroup().id, projectName, environment, location)
@@ -33,38 +35,21 @@ var uid = uniqueString(resourceGroup().id, projectName, environment, location)
 //   name: 'kv-${uid}'
 // }
 
-resource logsWorkspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' existing = {
-  name: 'logs-${projectName}-${environment}-${uid}'
-}
-
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2022-02-01-preview' existing = {
   name: 'cr${uid}'
 }
 
-// Azure Container Environment
-// https://docs.microsoft.com/azure/templates/microsoft.app/managedenvironments?tabs=bicep
-resource containerEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' = {
+resource containerEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' existing = {
   name: 'cae-${projectName}-${environment}-${uid}'
-  location: location
-  tags: tags
-  properties: {
-    appLogsConfiguration: {
-      destination: 'log-analytics'
-      logAnalyticsConfiguration: {
-        customerId: logsWorkspace.properties.customerId
-        sharedKey: listKeys(logsWorkspace.id, '2021-06-01').primarySharedKey
-      }
-    }
-    // zoneRedundant: false
-  }
 }
 
 var containerUid = uniqueString(uid, imageName)
+var truncatedImageName = substring(imageName, 0, min(length(imageName), 15))
 
 // Azure Container Apps
 // https://docs.microsoft.com/azure/templates/microsoft.app/containerapps?tabs=bicep
 resource container 'Microsoft.App/containerApps@2022-03-01' = {
-  name: 'ca-${containerUid}'
+  name: 'ca-${truncatedImageName}-${containerUid}' // 32 characters max
   location: location
   tags: tags
   properties: {

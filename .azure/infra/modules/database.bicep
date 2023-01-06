@@ -22,21 +22,27 @@ param tags object = {}
 // Resource-specific parameters
 // ---------------------------------------------------------------------------
 
-@description('Specify the database type')
-@allowed([
-  'CoreSQL'
-  'MongoDB'
-])
-param databaseType string = 'CoreSQL'
+// TODO: tier
+
+// @description('Specify the database type')
+// @allowed([
+//   'NoSQL'
+//   'MongoDB'
+//   'PostgreSQL'
+// ])
+// param databaseType string = 'NoSQL'
 
 // Resource-specific parameters
-param collections array = []
+// param databases array = []
+// param collections array = []
 
 // ---------------------------------------------------------------------------
 
 var uid = uniqueString(resourceGroup().id, projectName, environment, location)
 
-resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2021-06-15' = {
+// Azure Cosmos DB
+// https://learn.microsoft.com/azure/templates/microsoft.documentdb/databaseaccounts?pivots=deployment-language-bicep
+resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' = {
   name: 'db-${projectName}-${environment}-${uid}'
   location: location
   tags: tags
@@ -45,6 +51,7 @@ resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2021-06-15' = {
     publicNetworkAccess: 'Enabled'
     enableAutomaticFailover: false
     // enableMultipleWriteLocations: false
+    // enableFreeTier: false
     databaseAccountOfferType: 'Standard'
     consistencyPolicy: {
       defaultConsistencyLevel: 'Session'
@@ -72,30 +79,14 @@ resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2021-06-15' = {
   }
 }
 
-resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2021-06-15' = {
-  parent: cosmosDb
-  name: '${projectName}db'
-  properties: {
-    resource: {
-      id: '${projectName}db'
-    }
-  }
-
-  resource cosmosDbContainer 'containers@2021-04-15' = {
-    name: 'users'
-    properties: {
-      resource: {
-        id: 'users'
-        partitionKey: {
-          paths: [
-            '/id'
-          ]
-          kind: 'Hash'
-        }
-      }
-    }
-  }
-}
+// resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2021-06-15' = {
+//   parent: cosmosDb
+//   name: '${projectName}-db'
+//   properties: {
+//     resource: {
+//       id: '${projectName}-db'
+//     }
+//   }
 
 // ---------------------------------------------------------------------------
 // Secrets
@@ -116,4 +107,4 @@ resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@20
 // Outputs
 // ---------------------------------------------------------------------------
 
-output name string = cosmosDb.name
+output databaseName string = cosmosDb.name

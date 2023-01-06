@@ -47,13 +47,35 @@ module registry './modules/registry.bicep' = {
   }
 }
 
-var containerImageNames = [
+module database './modules/database.bicep' = {
+  name: 'database'
+  scope: resourceGroup()
+  params: {
+    projectName: projectName
+    environment: environment
+    location: location
+    tags: commonTags
+  }
+}
+
+module containerEnvironment './modules/container-env.bicep' = {
+  name: 'container-env'
+  scope: resourceGroup()
+  params: {
+    projectName: projectName
+    environment: environment
+    location: location
+    tags: commonTags
+  }
+}
+
+var containerNames = [
   'settings-api'
   'dice-api'
   'gateway-api'
 ]
 
-module containers './modules/container.bicep' = [for imageName in containerImageNames: {
+module containers './modules/container.bicep' = [for imageName in containerNames: {
   name: 'container-${imageName}'
   scope: resourceGroup()
   params: {
@@ -63,7 +85,7 @@ module containers './modules/container.bicep' = [for imageName in containerImage
     tags: commonTags
     imageName: imageName
   }
-  dependsOn: [logs, registry]
+  dependsOn: [logs, registry, containerEnvironment]
 }]
 
 var websiteNames = [
@@ -89,9 +111,14 @@ output logsWorkspaceCustomerId string = logs.outputs.logsWorkspaceCustomerId
 output registryName string = registry.outputs.registryName
 output registryServer string = registry.outputs.registryServer
 
-output containerImageNames array = containerImageNames
-output containerAppNames array = [for (name, i) in containerImageNames: containers[i].outputs.containerName]
-output containerAppUrls array = [for (name, i) in containerImageNames: containers[i].outputs.containerUrl]
+output databaseName string = database.outputs.databaseName
+
+output containerAppEnvironmentName string = containerEnvironment.outputs.containerEnvironmentName
+output containerAppEnvironmentId string = containerEnvironment.outputs.containerEnvironmentId
+
+output containerNames array = containerNames
+output containerAppNames array = [for (name, i) in containerNames: containers[i].outputs.containerName]
+output containerAppUrls array = [for (name, i) in containerNames: containers[i].outputs.containerUrl]
 
 output websiteNames array = websiteNames
 output staticWebAppNames array = [for (name, i) in websiteNames: websites[i].outputs.staticWebAppName]
