@@ -3,7 +3,7 @@
 # Usage: ./infra.sh <command> <project_name> [environment_name] [location]
 # Manages the Azure infrastructure for this project.
 ##############################################################################
-# v0.9.2 | dependencies: Azure CLI, jq, perl
+# v0.9.3 | dependencies: Azure CLI, jq, perl
 ##############################################################################
 
 set -e
@@ -176,7 +176,19 @@ retrieveSecrets() {
     echo "app_insights_connection_string='${app_insights_connection_string}'" >> ${env_file}
   fi
 
-  # TODO: retrieve other secrets (swa tokens, connection strings, etc.)
+  # Get cosmos db connection strings
+  if [[ -n "$database_name" ]]; then
+    database_connection_string=$( \
+      az cosmosdb keys list --type connection-strings \
+        --name ${database_name} \
+        --resource-group ${resource_group_name} \
+        --query "connectionStrings[0].connectionString" \
+        --output tsv \
+      )
+    echo "database_connection_string='${database_connection_string}'" >> ${env_file}
+  fi
+
+  # TODO: retrieve other secrets (swa tokens, etc.)
 
   echo "Secrets for environment '${environment}' saved to '${env_file}'."
 }
