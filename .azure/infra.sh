@@ -3,7 +3,7 @@
 # Usage: ./infra.sh <command> <project_name> [environment_name] [location]
 # Manages the Azure infrastructure for this project.
 ##############################################################################
-# v0.9.3 | dependencies: Azure CLI, jq, perl
+# v0.9.4 | dependencies: Azure CLI, jq, perl
 ##############################################################################
 
 set -e
@@ -16,7 +16,7 @@ subcommand="${1}"
 project_name="${2:-$project_name}"
 environment="${environment:-prod}"
 environment="${3:-$environment}"
-location="${location:-eastus2}"
+location="${location:-eastus}"
 location="${4:-$location}"
 resource_group_name=rg-${project_name}-${environment}
 
@@ -26,7 +26,7 @@ showUsage() {
   echo "Manages the Azure infrastructure for this project."
   echo
   echo "Commands:"
-  echo "  create   Creates the infrastructure for this project."
+  echo "  update   Creates or updates the infrastructure for this project."
   echo "  delete   Deletes the infrastructure for this project."
   echo "  cancel   Cancels the last infrastructure deployment."
   echo "  env      Retrieve settings for the target environment."
@@ -62,7 +62,7 @@ createSettings() {
   echo "Settings for environment '${environment}' saved to '${env_file}'."
 }
 
-createInfrastructure() {
+updateInfrastructure() {
   echo "Preparing environment '${environment}' of project '${project_name}'..."
   az group create \
     --name ${resource_group_name} \
@@ -200,8 +200,8 @@ if [[ -z "$project_name" ]]; then
 fi
 
 case "$subcommand" in
-  create)
-    createInfrastructure
+  update)
+    updateInfrastructure
     ;;
   delete)
     deleteInfrastructure
