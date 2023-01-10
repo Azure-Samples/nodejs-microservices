@@ -1,6 +1,6 @@
 # azure-nodejs-microservices
 
-Workshop URL: https://aka.ms/ws?src=gh:sinedied/azure-nodejs-microservices/main/docs/>
+Workshop URL: https://aka.ms/ws?src=gh:sinedied/azure-nodejs-microservices/main/docs/
 
 ## Prerequisites
 
