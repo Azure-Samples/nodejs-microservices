@@ -14,16 +14,19 @@ mkdir $target_folder
 cd $target_folder
 
 # Settings API
+echo "Creating settings-api project..."
 npx -y fastify-cli@5.7.0 generate settings-api --esm
 rm -rf settings-api/routes/example
 perl -i -pe "s/fastify start -l info app.js/fastify start -l info app.js -a 0.0.0.0 -p 4001/" settings-api/package.json
 perl -i -pe "s/fastify start -w -l info -P app.js/fastify start -w -l info -P app.js -p 4001/" settings-api/package.json
 
 # Dice API
+echo "Creating dice-api project..."
 npx -y @nestjs/cli@9.1.8 new dice-api --package-manager npm --skip-git --skip-install
 perl -i -pe "s/3000/4002/" dice-api/src/main.ts
 
 # Gateway API
+echo "Creating gateway-api project..."
 npx -y express-generator@4.16.1 --no-view gateway-api
 rm -rf gateway-api/public
 rm -rf gateway-api/routes/users.js
@@ -73,6 +76,7 @@ echo -e '
 ' > gateway-api/package.json
 
 # Website
+echo "Creating website project..."
 npx -y create-vite@4.0.0 website --template vanilla
 rm -rf website/counter.js
 rm -rf website/javascript.svg

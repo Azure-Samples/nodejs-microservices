@@ -6,18 +6,22 @@
 
 set -euo pipefail
 cd $(dirname ${BASH_SOURCE[0]})
+cd ..
 
 TEMPLATE_HOME=/tmp/azure-nodejs-microservices-template
 TEMPLATE_REPO=git@github.com:sinedied/azure-nodejs-microservices-template.git
 
+echo "Preparing GitHub project template..."
+rm -rf /tmp/azure-nodejs-microservices-template
 mkdir -p $TEMPLATE_HOME
-cp -r ../ $TEMPLATE_HOME
+find . -type d -not -path '*node_modules*' -not -path '*.git/*' -not -path './packages*' -exec mkdir -p '{}' "$TEMPLATE_HOME/{}" ';'
+find . -type f -not -path '*node_modules*' -not -path '*.git/*' -not -path './packages*' -exec cp -r '{}' "$TEMPLATE_HOME/{}" ';'
 cd $TEMPLATE_HOME
 
 # Create projects
-rm -rf packages
 ./scripts/create-projects.sh
 
+rm -rf node_modules
 rm -rf .git
 rm -rf .github
 rm -rf TODO
@@ -25,7 +29,8 @@ rm -rf docker-compose.yml
 rm -rf package-lock.json
 rm -rf scripts
 rm -rf docs
-rm -rf .azure/*.env
+rm -rf .azure/.*.env
+rm -rf .azure/_*.sh
 
 # Build script
 echo -e '#!/usr/bin/env bash
@@ -51,13 +56,12 @@ commit_sha="$(git rev-parse HEAD)"
 ' > .azure/deploy.sh
 
 # Update git repo
-# git init
-# git remote add origin $TEMPLATE_REPO
-# git add .
-# git commit -m "chore: initial commit"
-# git push -u origin main --force
+git init
+git remote add origin $TEMPLATE_REPO
+git add .
+git commit -m "chore: initial commit"
+git push -u origin main --force
 
-open $TEMPLATE_HOME
-#rm -rf $TEMPLATE_HOME
+rm -rf $TEMPLATE_HOME
 
 echo "Successfully updated project template."
