@@ -55,8 +55,8 @@ az containerapp update \
   --resource-group ${resource_group_name} \
   --image ${registry_server}/gateway-api:${commit_sha} \
   --set-env-vars \
-    SETTINGS_API_URL=${container_app_urls[0]} \
-    DICE_API_URL=${container_app_urls[1]} \
+    SETTINGS_API_URL=https://${container_app_urls[0]} \
+    DICE_API_URL=https://${container_app_urls[1]} \
   --query "properties.configuration.ingress.fqdn" \
   --output tsv
 
