@@ -10,8 +10,9 @@ jobs:
   build_and_deploy:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    container: bluebuilder/azure:5c26c4b
-    options: --user 1001
+    container:
+      image: bluebuilder/azure:5c26c4b
+      options: --user 1001
     steps:
       - name: Checkout
         uses: actions/checkout@v3
