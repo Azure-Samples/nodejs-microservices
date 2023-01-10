@@ -22,10 +22,33 @@ param tags object = {}
 // Resource-specific parameters
 // ---------------------------------------------------------------------------
 
-@description('The name of the image to deploy')
-param imageName string
+@description('The container name')
+param name string
 
-// TODO: CPU/memory resources, ingress, env
+@description('Container options')
+param options object = {}
+
+// @description('Enable or disable ingress')
+// ingress: bool = false
+
+// @description('Allow access from outside of the Container Apps environment')
+// param externalIngress bool = false
+
+// @description('Target port for ingress')
+// param targetPort int = 80
+
+// @description('Allow insecure connections for ingress')
+// param allowInsecure bool = false
+
+// ---------------------------------------------------------------------------
+// Options
+// ---------------------------------------------------------------------------
+var ingress = contains(options, 'ingress')
+var external = contains(options.ingress, 'external') ? options.ingress.external : false
+var targetPort = contains(options.ingress, 'targetPort') ? options.ingress.targetPort : false
+var allowInsecure = contains(options.ingress, 'allowInsecure') ? options.ingress.allowInsecure : false
+
+// TODO: CPU/memory resources, scaling rules, env
 
 // ---------------------------------------------------------------------------
 
@@ -43,24 +66,24 @@ resource containerEnvironment 'Microsoft.App/managedEnvironments@2022-03-01' exi
   name: 'cae-${projectName}-${environment}-${uid}'
 }
 
-var containerUid = uniqueString(uid, imageName)
-var truncatedImageName = substring(imageName, 0, min(length(imageName), 15))
+var containerUid = uniqueString(uid, name)
+var truncatedname = substring(name, 0, min(length(name), 15))
 
 // Azure Container Apps
 // https://docs.microsoft.com/azure/templates/microsoft.app/containerapps?tabs=bicep
 resource container 'Microsoft.App/containerApps@2022-03-01' = {
-  name: 'ca-${truncatedImageName}-${containerUid}' // 32 characters max
+  name: 'ca-${truncatedname}-${containerUid}' // 32 characters max
   location: location
   tags: tags
   properties: {
     configuration: {
       // activeRevisionsMode: 'Single'
-      ingress: {
-        allowInsecure: false
-        external: true
-        targetPort: 3000
+      ingress: ingress ? {
+        allowInsecure: allowInsecure
+        external: external
+        targetPort: targetPort
         // transport: 'Auto'
-      }
+      } : {}
       registries: [
         {
           server: containerRegistry.properties.loginServer
@@ -86,9 +109,9 @@ resource container 'Microsoft.App/containerApps@2022-03-01' = {
             //   value: 'string'
             // }
           ]
-          // image: '${containerRegistry.properties.loginServer}/${imageName}'
+          // image: '${containerRegistry.properties.loginServer}/${name}'
           image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
-          name: imageName
+          name: name
           resources: {
             cpu: json('0.25')  // float values aren't currently supported
             memory: '0.5Gi'

@@ -30,6 +30,9 @@ param tags object = {}
 ])
 param tier string = 'Basic'
 
+@description('Allow anonymous pulls')
+param anonymousPullEnabled bool = false
+
 // ---------------------------------------------------------------------------
 
 var uid = uniqueString(resourceGroup().id, projectName, environment, location)
@@ -45,6 +48,7 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2022-02-01-pr
   }
   properties: {
     adminUserEnabled: true
+    anonymousPullEnabled: anonymousPullEnabled
   }
 }
 

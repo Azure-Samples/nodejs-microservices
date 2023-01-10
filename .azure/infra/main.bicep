@@ -17,6 +17,8 @@ param location string = 'eastus'
 
 // ---------------------------------------------------------------------------
 
+var config = loadJsonContent('./config.json')
+
 var commonTags = {
   project: projectName
   environment: environment
@@ -69,31 +71,26 @@ module containerEnvironment './modules/container-env.bicep' = {
   }
 }
 
-var containerNames = [
-  'settings-api'
-  'dice-api'
-  'gateway-api'
-]
+var containerNames = map(config.containers, c => c.name)
 
-module containers './modules/container.bicep' = [for imageName in containerNames: {
-  name: 'container-${imageName}'
+module containers './modules/container.bicep' = [for container in config.containers: {
+  name: 'container-${container.name}'
   scope: resourceGroup()
   params: {
     projectName: projectName
     environment: environment
     location: location
     tags: commonTags
-    imageName: imageName
+    name: container.name
+    options: container.options
   }
   dependsOn: [logs, registry, containerEnvironment]
 }]
 
-var websiteNames = [
-  'website'
-]
+var websiteNames = map(config.websites, w => w.name)
 
-module websites './modules/website.bicep' = [for name in websiteNames: {
-  name: 'website-${name}'
+module websites './modules/website.bicep' = [for website in config.websites: {
+  name: 'website-${website.name}'
   scope: resourceGroup()
   params: {
     projectName: projectName

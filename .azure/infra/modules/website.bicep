@@ -29,13 +29,34 @@ param tags object = {}
 ])
 param tier string = 'Standard'
 
+@description('Website options')
+param options object = {}
+
 // TODO: need custom domain support before we can add this
 // @description('Enable enterprise-grade edge caching')
 // param enterpriseEdge bool = false
 
 // ---------------------------------------------------------------------------
+// Options
+// ---------------------------------------------------------------------------
+var linkedBackend = contains(options, 'linkedBackend')
+var backendType = contains(options.linkedBackend, 'type') ? options.linkedBackend.type : ''
+var backendName = contains(options.linkedBackend, 'name') ? options.linkedBackend.name : ''
+
+// ---------------------------------------------------------------------------
 
 var uid = uniqueString(resourceGroup().id, projectName, environment, location)
+
+var containerUid = uniqueString(uid, backendName)
+var truncatedname = substring(backendName, 0, min(length(backendName), 15))
+
+// Azure Container Apps linked backend
+resource container 'Microsoft.App/containerApps@2022-03-01' existing = {
+  name: 'ca-${truncatedname}-${containerUid}'
+}
+
+var linkedBackendId = backendType == 'container' ? container.id : ''
+// TODO: linked function
 
 // Azure Static Web Apps
 // https://docs.microsoft.com/azure/templates/microsoft.web/staticsites?tabs=bicep
@@ -49,8 +70,16 @@ resource staticWebApp 'Microsoft.Web/staticSites@2021-03-01' = {
   properties: {
     provider: 'custom'
     stagingEnvironmentPolicy: 'Enabled'
-    allowConfigFileUpdates: false
+    allowConfigFileUpdates: true
     enterpriseGradeCdnStatus: 'Disabled'
+  }
+
+  resource staticWebAppBackend 'linkedBackends@2022-03-01' = if (linkedBackend) {
+    name: 'website-api-${projectName}-${environment}-${uid}'
+    properties: {
+      backendResourceId: linkedBackendId
+      region: location
+    }
   }
 }
 
