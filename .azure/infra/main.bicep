@@ -97,6 +97,7 @@ module websites './modules/website.bicep' = [for website in config.websites: {
     environment: environment
     location: location
     tags: commonTags
+    options: website.options
   }
 }]
 
