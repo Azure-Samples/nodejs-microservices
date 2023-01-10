@@ -71,7 +71,7 @@ deployment_token=$(\
 )
 
 swa deploy \
-  --app-name "${static_web_app_name}" \
+  --app-name "${static_web_app_names[0]}" \
   --resource-group "${resource_group_name}" \
   --tenant-id "${tenant_id}" \
   --subscription-id "${subscription_id}" \
