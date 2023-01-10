@@ -23,6 +23,6 @@ jobs:
       # - name: Create infrastructure
       #   run: cd .azure && ./infra.sh update
       - name: Build project
-        run: sudo chown -R $(id -u):$(id -g) . && cd .azure && ./infra.sh env && ./build.sh
+        run: chown -R $(id -u):$(id -g) . && cd .azure && ./infra.sh env && ./build.sh
       - name: Deploy project
         run: cd .azure && ./deploy.sh
