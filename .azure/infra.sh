@@ -12,6 +12,7 @@ if [[ -f ".settings" ]]; then
   source .settings
 fi
 
+time=`date +%s`
 subcommand="${1}"
 project_name="${2:-$project_name}"
 environment="${environment:-prod}"
@@ -219,3 +220,4 @@ case "$subcommand" in
     exit 1
     ;;
 esac
+echo "Done in $(($(date +%s)-$time))s"
