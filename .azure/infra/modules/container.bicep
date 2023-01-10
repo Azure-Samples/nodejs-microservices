@@ -44,9 +44,9 @@ param options object = {}
 // Options
 // ---------------------------------------------------------------------------
 var ingress = contains(options, 'ingress')
-var external = contains(options.ingress, 'external') ? options.ingress.external : false
-var targetPort = contains(options.ingress, 'targetPort') ? options.ingress.targetPort : false
-var allowInsecure = contains(options.ingress, 'allowInsecure') ? options.ingress.allowInsecure : false
+var external = ingress && contains(options.ingress, 'external') ? options.ingress.external : false
+var targetPort = ingress && contains(options.ingress, 'targetPort') ? options.ingress.targetPort : false
+var allowInsecure = ingress && contains(options.ingress, 'allowInsecure') ? options.ingress.allowInsecure : false
 
 // TODO: CPU/memory resources, scaling rules, env
 
