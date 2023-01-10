@@ -25,7 +25,7 @@ docker image tag settings-api ${registry_name}.azurecr.io/settings-api:${commit_
 docker image push ${registry_server}/settings-api:${commit_sha}
 
 az containerapp update \
-  --name ${container_app_name[0]} \
+  --name ${container_app_names[0]} \
   --resource-group ${resource_group_name} \
   --image ${registry_server}/settings-api:${commit_sha} \
   --set-env-vars \
@@ -38,7 +38,7 @@ docker image tag dice-api ${registry_name}.azurecr.io/dice-api:${commit_sha}
 docker image push ${registry_server}/dice-api:${commit_sha}
 
 az containerapp update \
-  --name ${container_app_name[1]} \
+  --name ${container_app_names[1]} \
   --resource-group ${resource_group_name} \
   --image ${registry_server}/dice-api:${commit_sha} \
   --set-env-vars \
@@ -51,7 +51,7 @@ docker image tag gateway-api ${registry_name}.azurecr.io/gateway-api:${commit_sh
 docker image push ${registry_server}/gateway-api:${commit_sha}
 
 az containerapp update \
-  --name ${container_app_name[2]} \
+  --name ${container_app_names[2]} \
   --resource-group ${resource_group_name} \
   --image ${registry_server}/gateway-api:${commit_sha} \
   --set-env-vars \
