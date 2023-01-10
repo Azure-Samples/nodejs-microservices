@@ -4,10 +4,10 @@
   "description": "A sample application demonstation Node.js microservices usage with an Azure infrastructure",
   "private": true,
   "scripts": {
-    "start": "concurrently npm:app:* --kill-others",
-    "app:services": "docker-compose up",
-    "app:website": "npm run start --workspace=website",
-    "build": "npm run build --if-present --workspaces",
+    "start": "concurrently npm:start:* --kill-others",
+    "start:services": "docker-compose up",
+    "start:website": "npm run start --workspace=website",
+    "build:website": "npm run build --workspaces=website",
     "docker:build": "npm run docker:build --if-present --workspaces "
   },
   "author": "Yohan Lasorsa",

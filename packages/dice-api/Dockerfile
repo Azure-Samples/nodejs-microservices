@@ -7,7 +7,7 @@ WORKDIR /app
 COPY ./package*.json ./
 COPY ./packages/dice-api ./packages/dice-api
 RUN npm ci --workspace=dice-api --cache /tmp/empty-cache
-RUN npm run build
+RUN npm run build --workspace=dice-api
 
 # Run Node.js app
 # ------------------------------------
