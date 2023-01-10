@@ -13,6 +13,7 @@ if [[ -f ".settings" ]]; then
   source .settings
 fi
 
+time=`date +%s`
 environment="${environment:-prod}"
 environment="${1:-$environment}"
 
@@ -24,6 +25,8 @@ source ".${environment}.env"
 
 echo "Deploying environment '${environment}'..."
 
+client_id="$(echo $AZURE_CREDENTIALS | jq -r .clientId)"
+client_secret="$(echo $AZURE_CREDENTIALS | jq -r .clientSecret)"
 subscription_id="$(echo $AZURE_CREDENTIALS | jq -r .subscriptionId)"
 tenant_id="$(echo $AZURE_CREDENTIALS | jq -r .tenantId)"
 commit_sha="$(git rev-parse HEAD)"
@@ -46,8 +49,8 @@ for i in ${!function_names[@]}; do
 done
 
 # Deploy container apps
-for i in ${!container_image_names[@]}; do
-  container_image_name=${container_image_names[$i]}
+for i in ${!container_names[@]}; do
+  container_name=${container_names[$i]}
   container_app_name=${container_app_names[$i]}
   container_app_url=${container_app_urls[$i]}
 
@@ -57,35 +60,38 @@ for i in ${!container_image_names[@]}; do
     --password-stdin \
     ${registry_name}.azurecr.io
 
-  docker image tag ${container_image_name} ${registry_name}.azurecr.io/${container_image_name}:${commit_sha}
-  docker image push ${registry_server}/${container_image_name}:${commit_sha}
+  docker image tag ${container_name} ${registry_name}.azurecr.io/${container_name}:${commit_sha}
+  docker image push ${registry_server}/${container_name}:${commit_sha}
 
-  az containerapp registry set \
-    --name ${container_app_name} \
-    --resource-group ${resource_group_name} \
-    --server ${registry_server} \
-    --username ${registry_username} \
-    --password ${registry_password}
+  # az containerapp registry set \
+  #   --name ${container_app_name} \
+  #   --resource-group ${resource_group_name} \
+  #   --server ${registry_server} \
+  #   --username ${registry_username} \
+  #   --password ${registry_password}
 
   az containerapp update \
     --name ${container_app_name} \
     --resource-group ${resource_group_name} \
-    --image ${registry_server}/${container_image_name}:${commit_sha}
+    --image ${registry_server}/${container_name}:${commit_sha} \
+    --query "properties.configuration.ingress.fqdn" \
+    --output tsv
 done
 
 # Deploy static web apps
-for i in ${!static_web_app_names[@]}; do
+for i in ${!website_names[@]}; do
+  website_name=${website_names[$i]}
   static_web_app_name=${static_web_app_names[$i]}
   static_web_app_url=${static_web_app_public_urls[$i]}
 
-  echo "Building '${static_web_app_name}'..."
+  echo "Building '${website_name}'..."
 
   # TODO: get src folder and build process from yaml
-  pushd packages/${static_web_app_name}
+  pushd packages/${website_name}
   npm install
   npm run build
 
-  echo "Deploying '${static_web_app_name}'..."
+  echo "Deploying '${website_name}'..."
 
   # Workaround because of https://github.com/Azure/azure-sdk-for-js/issues/22751
   deployment_token=$(\
@@ -95,18 +101,28 @@ for i in ${!static_web_app_names[@]}; do
       --output tsv \
     )
   
-  # Not working at the moment for Next.js preview
-  swa deploy \
-    # --output-location "." \
-    --app-name "${static_web_app_name}" \
-    --resource-group "${resource_group_name}" \
-    --tenant-id "${tenant_id}" \
-    --subscription-id "${subscription_id}" \
-    --env "production" \
-    --deployment-token "${deployment_token}" \
-    --verbose
+  # --output-location "dist" \
+  # swa deploy \
+  #   --app-name "${static_web_app_name}" \
+  #   --resource-group "${resource_group_name}" \
+  #   --tenant-id "${tenant_id}" \
+  #   --subscription-id "${subscription_id}" \
+  #   --env "production" \
+  #   --deployment-token "${deployment_token}" \
+  #   --verbose silly --print-config
+
+  # swa deploy \
+  #   --app-name "${static_web_app_name}" \
+  #   --resource-group "${resource_group_name}" \
+  #   --tenant-id "${tenant_id}" \
+  #   --subscription-id "${subscription_id}" \
+  #   --env "production" \
+  #   --client-id "${client_id}" \
+  #   --client-secret "${client_secret}" \
+  #   --verbose --no-use-keychain
 
   popd
 done
 
 echo "Deployment complete for environment '${environment}'."
+echo "Done in $(($(date +%s)-$time))s"
