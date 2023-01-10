@@ -3,12 +3,14 @@
   "configurations": {
     "website": {
       "appLocation": ".",
-      "apiLocation": "__dummy",
       "outputLocation": "dist",
       "run": "npm run dev",
       "appBuildCommand": "npm run build",
       "appDevserverUrl": "http://localhost:5173",
-      "apiDevserverUrl": "http://localhost:4003"
+      "apiDevserverUrl": "http://localhost:4003",
+      "start": {
+        "apiLocation": "__dummy"
+      }
     }
   }
 }
