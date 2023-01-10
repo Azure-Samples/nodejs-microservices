@@ -3,7 +3,7 @@
 set -e
 cd $(dirname ${BASH_SOURCE[0]})
 source .settings
-source ".prod.env"
+source .prod.env
 cd ..
 
 client_id="$(echo $AZURE_CREDENTIALS | jq -r .clientId)"
@@ -14,52 +14,68 @@ commit_sha="$(git rev-parse HEAD)"
 
 az config set extension.use_dynamic_install=yes_without_prompt
 
-# Deploy container apps
-for i in ${!container_names[@]}; do
-  container_name=${container_names[$i]}
-  container_app_name=${container_app_names[$i]}
-  container_app_url=${container_app_urls[$i]}
+echo "Logging into Docker..."
+echo ${registry_password} | docker login \
+  --username ${registry_username} \
+  --password-stdin \
+  ${registry_name}.azurecr.io
 
-  echo "Deploying '${container_app_name}'..."
-  echo ${registry_password} | docker login \
-    --username ${registry_username} \
-    --password-stdin \
-    ${registry_name}.azurecr.io
+echo "Deploying 'settings-api'..."
+docker image tag settings-api ${registry_name}.azurecr.io/settings-api:${commit_sha}
+docker image push ${registry_server}/settings-api:${commit_sha}
 
-  docker image tag ${container_name} ${registry_name}.azurecr.io/${container_name}:${commit_sha}
-  docker image push ${registry_server}/${container_name}:${commit_sha}
+az containerapp update \
+  --name ${container_app_name} \
+  --resource-group ${resource_group_name} \
+  --image ${registry_server}/settings-api:${commit_sha} \
+  --set-env-vars \
+    DATABASE_CONNECTION_STRING=${database_connection_string} \
+  --query "properties.configuration.ingress.fqdn" \
+  --output tsv
 
-  az containerapp update \
-    --name ${container_app_name} \
-    --resource-group ${resource_group_name} \
-    --image ${registry_server}/${container_name}:${commit_sha} \
-    --query "properties.configuration.ingress.fqdn" \
-    --output tsv
-done
+echo "Deploying 'dice-api'..."
+docker image tag dice-api ${registry_name}.azurecr.io/dice-api:${commit_sha}
+docker image push ${registry_server}/dice-api:${commit_sha}
 
-# Deploy static web apps
-for i in ${!website_names[@]}; do
-  website_name=${website_names[$i]}
-  static_web_app_name=${static_web_app_names[$i]}
+az containerapp update \
+  --name ${container_app_name} \
+  --resource-group ${resource_group_name} \
+  --image ${registry_server}/dice-api:${commit_sha} \
+  --set-env-vars \
+    DATABASE_CONNECTION_STRING=${database_connection_string} \
+  --query "properties.configuration.ingress.fqdn" \
+  --output tsv
 
-  pushd packages/${website_name}
-  echo "Deploying '${website_name}'..."
+echo "Deploying 'gateway-api'..."
+docker image tag gateway-api ${registry_name}.azurecr.io/gateway-api:${commit_sha}
+docker image push ${registry_server}/gateway-api:${commit_sha}
 
-  deployment_token=$(\
-    az staticwebapp secrets list \
-      --name "${static_web_app_name}" \
-      --query "properties.apiKey" \
-      --output tsv \
-    )
-  
-  swa deploy \
-    --app-name "${static_web_app_name}" \
-    --resource-group "${resource_group_name}" \
-    --tenant-id "${tenant_id}" \
-    --subscription-id "${subscription_id}" \
-    --env "production" \
-    --deployment-token "${deployment_token}" \
-    --verbose --no-use-keychain
+az containerapp update \
+  --name ${container_app_name} \
+  --resource-group ${resource_group_name} \
+  --image ${registry_server}/gateway-api:${commit_sha} \
+  --set-env-vars \
+    SETTINGS_API_URL=${container_app_urls[0]} \
+    DICE_API_URL=${container_app_urls[1]} \
+  --query "properties.configuration.ingress.fqdn" \
+  --output tsv
 
-  popd
-done
+echo "Deploying 'website'..."
+cd packages/website
+
+deployment_token=$(\
+  az staticwebapp secrets list \
+    --name "${static_web_app_name}" \
+    --query "properties.apiKey" \
+    --output tsv \
+)
+
+swa deploy \
+  --app-name "${static_web_app_name}" \
+  --resource-group "${resource_group_name}" \
+  --tenant-id "${tenant_id}" \
+  --subscription-id "${subscription_id}" \
+  --deployment-token "${deployment_token}" \
+  --env "production" \
+  --no-use-keychain \
+  --verbose
