@@ -102,14 +102,14 @@ for i in ${!website_names[@]}; do
     )
   
   # --output-location "dist" \
-  # swa deploy \
-  #   --app-name "${static_web_app_name}" \
-  #   --resource-group "${resource_group_name}" \
-  #   --tenant-id "${tenant_id}" \
-  #   --subscription-id "${subscription_id}" \
-  #   --env "production" \
-  #   --deployment-token "${deployment_token}" \
-  #   --verbose silly --print-config
+  swa deploy \
+    --app-name "${static_web_app_name}" \
+    --resource-group "${resource_group_name}" \
+    --tenant-id "${tenant_id}" \
+    --subscription-id "${subscription_id}" \
+    --env "production" \
+    --deployment-token "${deployment_token}" \
+    --verbose silly --print-config
 
   # swa deploy \
   #   --app-name "${static_web_app_name}" \
