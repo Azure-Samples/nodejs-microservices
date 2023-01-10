@@ -1,5 +1,7 @@
 # azure-nodejs-microservices
 
+Workshop URL: https://aka.ms/ws?src=gh:sinedied/azure-nodejs-microservices/main/docs/>
+
 ## Prerequisites
 
 - Node.js 18+
@@ -8,7 +10,7 @@
 ## Architecture
 
 <!-- can be edited with https://draw.io -->
-![Application architecture](./docs/architecture.drawio.png)
+![Application architecture](./docs/assets/architecture.drawio.png)
 
 ## How to run locally
 

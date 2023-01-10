@@ -1,19 +1,21 @@
 # TODO solution
 - [x] Feedback npm CI with docker + npm workspaces
-- [ ] CosmosDB
+- [x] CosmosDB
 - [ ] Add correlation ID in logs
 - [ ] Bicep
-  - [ ] update setup script
+  - [x] update setup script
   - [ ] update build script
   - [ ] update deploy script
 - [ ] GitHub Actions deployment
 - [ ] devcontainer with vscode extensions
-- [ ] secrets bash array with newlines
+- [ ] secrets bash array with newlines -> nope?
+- [ ] env file uppercase
+- [ ] URLs and DB CS in format <name>_URL
 - [ ] bash strict mode
 
 # Workshop
 - [x] Simple website to push/get requests with auth [SWA]
-- [ ] CosmosDB to store results
+- [x] CosmosDB to store results
 <!-- - [ ] Event Grid to pass events -->
 <!-- - [ ] Azure Function to process events and store in DB -->
 - [x] Microservices problems

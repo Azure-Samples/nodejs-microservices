@@ -1,13 +1,6 @@
 {
   "routes": [
-    {
-      "route": "/.auth/login/github",
-      "statusCode": 200
-    },
-    {
-      "route": "/.auth/login/*",
-      "statusCode": 404
-    },
+
     {
       "route": "/api/*",
       "allowedRoles": ["authenticated"]
