@@ -10,6 +10,7 @@ if [[ -f ".settings" ]]; then
   source .settings
 fi
 
+time=`date +%s`
 # TODO: remove, build need to be independant of environment
 environment="${environment:-prod}"
 environment="${1:-$environment}"
@@ -27,18 +28,18 @@ cd ..
 
 # TODO: get src folders and build commands from yaml
 # echo "Building 'root'..."
-# npm run docker:build --workspaces
+npm run docker:build --workspaces -- --platform=linux/amd64
 
 # Build containers
-for i in ${!container_names[@]}; do
-  container_image_name=${container_names[$i]}
+# for i in ${!container_names[@]}; do
+#   container_name=${container_names[$i]}
 
-  # TODO: get src folders and build commands from yaml
-  echo "Building '$container_name'..."
-  pushd packages/$container_name
-  npm run docker:build
-  popd
-done
+#   # TODO: get src folders and build commands from yaml
+#   echo "Building '$container_name'..."
+#   pushd packages/$container_name
+#   npm run docker:build
+#   popd
+# done
 
 # Build websites
 for i in ${!websiteNames[@]}; do
@@ -53,3 +54,4 @@ for i in ${!websiteNames[@]}; do
 done
 
 echo "Build complete for project '${project_name}'."
+echo "Done in $(($(date +%s)-$time))s"
