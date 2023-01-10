@@ -21,6 +21,6 @@ jobs:
       # - name: Create infrastructure
       #   run: cd .azure && ./infra.sh update
       - name: Build project
-        run: cd .azure && ./build.sh
+        run: cd .azure && ./infra.sh env && ./build.sh
       - name: Deploy project
         run: cd .azure && ./deploy.sh
