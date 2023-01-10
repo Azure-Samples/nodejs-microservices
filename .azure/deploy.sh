@@ -65,7 +65,7 @@ cd packages/website
 
 deployment_token=$(\
   az staticwebapp secrets list \
-    --name "${static_web_app_name}" \
+    --name "${static_web_app_names[0]}" \
     --query "properties.apiKey" \
     --output tsv \
 )
