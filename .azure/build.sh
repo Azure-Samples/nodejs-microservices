@@ -28,7 +28,7 @@ cd ..
 
 # TODO: get src folders and build commands from yaml
 # echo "Building 'root'..."
-npm run docker:build --workspaces -- --platform=linux/amd64
+npm run docker:build -- --platform=linux/amd64
 
 # Build containers
 # for i in ${!container_names[@]}; do
