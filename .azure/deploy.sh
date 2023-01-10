@@ -101,7 +101,6 @@ for i in ${!website_names[@]}; do
       --output tsv \
     )
   
-  npm i -g @azure/static-web-apps-cli
   # --output-location "dist" \
   swa deploy \
     --app-name "${static_web_app_name}" \
@@ -110,7 +109,7 @@ for i in ${!website_names[@]}; do
     --subscription-id "${subscription_id}" \
     --env "production" \
     --deployment-token "${deployment_token}" \
-    --verbose silly --print-config
+    --verbose --no-use-keychain
 
   # swa deploy \
   #   --app-name "${static_web_app_name}" \
