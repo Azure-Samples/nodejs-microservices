@@ -41,7 +41,10 @@ var resources = contains(options, 'resources')
 var cpu = resources && contains(options.resources, 'cpu') ? options.resources.cpu : '0.25'
 var memory = resources && contains(options.resources, 'memory') ? options.resources.memory : '0.5Gi'
 
-// TODO: scaling rules
+var scale = contains(options, 'scale')
+var minReplicas = scale && contains(options.scale, 'minReplicas') ? options.scale.minReplicas : 0
+var maxReplicas = scale && contains(options.scale, 'maxReplicas') ? options.scale.maxReplicas : 10
+var rules = scale && contains(options.scale, 'rules') ? options.scale.rules : []
 
 // ---------------------------------------------------------------------------
 
@@ -106,7 +109,9 @@ resource container 'Microsoft.App/containerApps@2022-03-01' = {
         }
       ]
       scale: {
-        maxReplicas: 10
+        minReplicas: minReplicas
+        maxReplicas: maxReplicas
+        rules: rules
       }
       // revisionSuffix: 'string'
     }
