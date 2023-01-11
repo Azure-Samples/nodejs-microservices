@@ -32,13 +32,10 @@ param tier string = 'Standard'
 @description('Website options')
 param options object = {}
 
-// TODO: need custom domain support before we can add this
-// @description('Enable enterprise-grade edge caching')
-// param enterpriseEdge bool = false
-
 // ---------------------------------------------------------------------------
 // Options
 // ---------------------------------------------------------------------------
+
 var linkedBackend = contains(options, 'linkedBackend')
 var backendType = linkedBackend && contains(options.linkedBackend, 'type') ? options.linkedBackend.type : ''
 var backendName = linkedBackend && contains(options.linkedBackend, 'name') ? options.linkedBackend.name : ''
@@ -56,7 +53,6 @@ resource container 'Microsoft.App/containerApps@2022-03-01' existing = if (linke
 }
 
 var linkedBackendId = backendType == 'container' ? container.id : ''
-// TODO: support linked function
 
 // Azure Static Web Apps
 // https://docs.microsoft.com/azure/templates/microsoft.web/staticsites?tabs=bicep

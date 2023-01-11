@@ -19,10 +19,6 @@ param location string = resourceGroup().location
 param tags object = {}
 
 // ---------------------------------------------------------------------------
-// Resource-specific parameters
-// ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
 
 var uid = uniqueString(resourceGroup().id, projectName, environment, location)
 

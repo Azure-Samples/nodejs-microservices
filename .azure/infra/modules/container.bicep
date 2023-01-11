@@ -28,35 +28,24 @@ param name string
 @description('Container options')
 param options object = {}
 
-// @description('Enable or disable ingress')
-// ingress: bool = false
-
-// @description('Allow access from outside of the Container Apps environment')
-// param externalIngress bool = false
-
-// @description('Target port for ingress')
-// param targetPort int = 80
-
-// @description('Allow insecure connections for ingress')
-// param allowInsecure bool = false
-
 // ---------------------------------------------------------------------------
 // Options
 // ---------------------------------------------------------------------------
+
 var ingress = contains(options, 'ingress')
 var external = ingress && contains(options.ingress, 'external') ? options.ingress.external : false
 var targetPort = ingress && contains(options.ingress, 'targetPort') ? options.ingress.targetPort : false
 var allowInsecure = ingress && contains(options.ingress, 'allowInsecure') ? options.ingress.allowInsecure : false
 
-// TODO: CPU/memory resources, scaling rules, env
+var resources = contains(options, 'resources')
+var cpu = resources && contains(options.resources, 'cpu') ? options.resources.cpu : '0.25'
+var memory = resources && contains(options.resources, 'memory') ? options.resources.memory : '0.5Gi'
+
+// TODO: scaling rules
 
 // ---------------------------------------------------------------------------
 
 var uid = uniqueString(resourceGroup().id, projectName, environment, location)
-
-// resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
-//   name: 'kv-${uid}'
-// }
 
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2022-02-01-preview' existing = {
   name: 'cr${uid}'
@@ -109,12 +98,10 @@ resource container 'Microsoft.App/containerApps@2022-03-01' = {
             //   value: 'string'
             // }
           ]
-          // image: '${containerRegistry.properties.loginServer}/${name}'
-          image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
           name: name
           resources: {
-            cpu: json('0.25')  // float values aren't currently supported
-            memory: '0.5Gi'
+            cpu: json(cpu)  // float values aren't currently supported
+            memory: memory
           }
         }
       ]

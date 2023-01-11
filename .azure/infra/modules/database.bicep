@@ -22,19 +22,10 @@ param tags object = {}
 // Resource-specific parameters
 // ---------------------------------------------------------------------------
 
-// TODO: tier
+@description('Database options')
+param options object = {}
 
-// @description('Specify the database type')
-// @allowed([
-//   'NoSQL'
-//   'MongoDB'
-//   'PostgreSQL'
-// ])
-// param databaseType string = 'NoSQL'
-
-// Resource-specific parameters
-// param databases array = []
-// param collections array = []
+// TODO: tier, REST endpoint (+output)
 
 // ---------------------------------------------------------------------------
 
@@ -70,38 +61,10 @@ resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' = {
       }
     ]
     backupPolicy: {
-      type: 'Periodic'
-      periodicModeProperties: {
-        backupIntervalInMinutes: 240
-        backupRetentionIntervalInHours: 8
-      }
+      type: 'Continuous'
     }
   }
 }
-
-// resource cosmosDbDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2021-06-15' = {
-//   parent: cosmosDb
-//   name: '${projectName}-db'
-//   properties: {
-//     resource: {
-//       id: '${projectName}-db'
-//     }
-//   }
-
-// ---------------------------------------------------------------------------
-// Secrets
-// ---------------------------------------------------------------------------
-
-// resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
-//   name: 'kv-${uid}'
-
-//   resource databaseConnectionString 'secrets' = {
-//     name: 'databaseConnectionString'
-//     properties: {
-//       value: cosmosDb.listConnectionStrings().connectionStrings[0].connectionString
-//     }
-//   }
-// }
 
 // ---------------------------------------------------------------------------
 // Outputs

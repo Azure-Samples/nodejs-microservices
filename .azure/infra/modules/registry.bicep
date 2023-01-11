@@ -30,8 +30,14 @@ param tags object = {}
 ])
 param tier string = 'Basic'
 
-@description('Allow anonymous pulls')
-param anonymousPullEnabled bool = false
+@description('Registry options')
+param options object = {}
+
+// ---------------------------------------------------------------------------
+// Options
+// ---------------------------------------------------------------------------
+
+var anonymousPullEnabled = contains(options, 'anonymousPullEnabled') ? options.anonymousPullEnabled : false
 
 // ---------------------------------------------------------------------------
 
@@ -51,27 +57,6 @@ resource containerRegistry 'Microsoft.ContainerRegistry/registries@2022-02-01-pr
     anonymousPullEnabled: anonymousPullEnabled
   }
 }
-
-// ---------------------------------------------------------------------------
-// Secrets
-// ---------------------------------------------------------------------------
-
-// resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
-//   name: 'kv-${uid}'
-
-//   resource containerRegistryUserName 'secrets' = {
-//     name: 'containerRegistryUserName'
-//     properties: {
-//       value: containerRegistry.listCredentials().username
-//     }
-//   }
-//   resource containerRegistryPassword 'secrets' = {
-//     name: 'containerRegistryPassword'
-//     properties: {
-//       value: containerRegistry.listCredentials().passwords[0].value
-//     }
-//   }
-// }
 
 // ---------------------------------------------------------------------------
 // Outputs

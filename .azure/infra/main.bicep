@@ -17,12 +17,11 @@ param location string = 'eastus'
 
 // ---------------------------------------------------------------------------
 
-var config = loadJsonContent('./config.json')
+var config = any(loadJsonContent('./config.json'))
 
 var commonTags = {
   project: projectName
   environment: environment
-  managedBy: 'blue'
 }
 
 targetScope = 'resourceGroup'
@@ -46,6 +45,7 @@ module registry './modules/registry.bicep' = {
     environment: environment
     location: location
     tags: commonTags
+    options: contains(config, 'registry') ? config.registry : {}
   }
 }
 
@@ -57,6 +57,7 @@ module database './modules/database.bicep' = {
     environment: environment
     location: location
     tags: commonTags
+    options: contains(config, 'database') ? config.database : {}
   }
 }
 
@@ -71,9 +72,10 @@ module containerEnvironment './modules/container-env.bicep' = {
   }
 }
 
-var containerNames = map(config.containers, c => c.name)
+var configContainers = contains(config, 'containers') ? config.containers : []
+var containerNames = map(configContainers, c => c.name)
 
-module containers './modules/container.bicep' = [for container in config.containers: {
+module containers './modules/container.bicep' = [for container in configContainers: {
   name: 'container-${container.name}'
   scope: resourceGroup()
   params: {
@@ -82,14 +84,15 @@ module containers './modules/container.bicep' = [for container in config.contain
     location: location
     tags: commonTags
     name: container.name
-    options: container.options
+    options: contains(container, 'options') ? container.options : {}
   }
   dependsOn: [logs, registry, containerEnvironment]
 }]
 
-var websiteNames = map(config.websites, w => w.name)
+var configWebsites = contains(config, 'websites') ? config.websites : []
+var websiteNames = map(configWebsites, w => w.name)
 
-module websites './modules/website.bicep' = [for website in config.websites: {
+module websites './modules/website.bicep' = [for website in configWebsites: {
   name: 'website-${website.name}'
   scope: resourceGroup()
   params: {
@@ -97,7 +100,7 @@ module websites './modules/website.bicep' = [for website in config.websites: {
     environment: environment
     location: location
     tags: commonTags
-    options: website.options
+    options: contains(website, 'options') ? website.options : {}
   }
 }]
 

@@ -19,16 +19,8 @@ param location string = resourceGroup().location
 param tags object = {}
 
 // ---------------------------------------------------------------------------
-// Resource-specific parameters
-// ---------------------------------------------------------------------------
-
-// ---------------------------------------------------------------------------
 
 var uid = uniqueString(resourceGroup().id, projectName, environment, location)
-
-// resource keyVault 'Microsoft.KeyVault/vaults@2021-11-01-preview' existing = {
-//   name: 'kv-${uid}'
-// }
 
 resource logsWorkspace 'Microsoft.OperationalInsights/workspaces@2021-06-01' existing = {
   name: 'logs-${projectName}-${environment}-${uid}'
