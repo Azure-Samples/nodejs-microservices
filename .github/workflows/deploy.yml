@@ -1,27 +1,28 @@
-name: Deploy on Azure
-
+name: Azure deployment
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
 
 jobs:
   build_and_deploy:
-    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     container:
-      image: bluebuilder/azure:5c26c4b
+      image: cloudhue/azure:256a55b
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+      - name: Fix permissions
+        run: |
+          chown -R $(id -u):$(id -g) .
+          echo "Current user:group is $(id -u -n):$(id -g -n)"
       - name: Login
-        run: cd .azure && ./setup.sh --ci-login
+        run: .azure/setup.sh --ci-login
         env:
           AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
-      # - name: Create infrastructure
-      #   run: cd .azure && ./infra.sh update
+      - name: Update infrastructure
+        run: .azure/infra.sh update
       - name: Build project
-        run: chown -R $(id -u):$(id -g) . && cd .azure && ./infra.sh env && ./build.sh
+        run: .azure/build.sh
       - name: Deploy project
-        run: cd .azure && ./deploy.sh
+        run: .azure/deploy.sh
