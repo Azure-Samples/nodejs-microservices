@@ -14,6 +14,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Fix permissions
         run: |
+          ls -al
           chown -R $(id -u):$(id -g) .
           echo "Current user:group is $(id -u -n):$(id -g -n)"
       - name: Login
@@ -26,3 +27,5 @@ jobs:
         run: .azure/build.sh
       - name: Deploy project
         run: .azure/deploy.sh
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
