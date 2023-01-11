@@ -25,7 +25,13 @@ param tags object = {}
 @description('Database options')
 param options object = {}
 
-// TODO: tier, REST endpoint (+output)
+// ---------------------------------------------------------------------------
+// Options
+// ---------------------------------------------------------------------------
+
+var type = contains(options, 'type') ? options.type : 'NoSQL'
+var kind = type == 'MongoDB' ? 'MongoDB' : 'GlobalDocumentDB'
+// TODO: tier: free, serverless, standard
 
 // ---------------------------------------------------------------------------
 
@@ -37,7 +43,7 @@ resource cosmosDb 'Microsoft.DocumentDB/databaseAccounts@2022-08-15' = {
   name: 'db-${projectName}-${environment}-${uid}'
   location: location
   tags: tags
-  kind: 'GlobalDocumentDB'
+  kind: kind
   properties: {
     publicNetworkAccess: 'Enabled'
     enableAutomaticFailover: false
