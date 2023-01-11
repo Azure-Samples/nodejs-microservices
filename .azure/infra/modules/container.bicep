@@ -101,6 +101,8 @@ resource container 'Microsoft.App/containerApps@2022-03-01' = {
             //   value: 'string'
             // }
           ]
+          // image: '${containerRegistry.properties.loginServer}/${name}'
+          image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
           name: name
           resources: {
             cpu: json(cpu)  // float values aren't currently supported
