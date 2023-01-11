@@ -6,7 +6,7 @@ const rollsService = require('../services/rolls');
 router.put('/settings', async function(req, res) {
   const settings = req.body;
   try {
-    settingsService.saveUserSettings(req.user, settings);
+    await settingsService.saveUserSettings(req.user, settings);
     res.sendStatus(204);
   } catch (error) {
     res.status(502).send(error.message);
