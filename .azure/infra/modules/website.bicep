@@ -22,13 +22,6 @@ param tags object = {}
 // Resource-specific parameters
 // ---------------------------------------------------------------------------
 
-@description('Specify the service tier')
-@allowed([
-  'Free'
-  'Standard'
-])
-param tier string = 'Standard'
-
 @description('Website options')
 param options object = {}
 
@@ -36,6 +29,8 @@ param options object = {}
 // Options
 // ---------------------------------------------------------------------------
 
+// Allowed: 'Free', 'Standard'
+var tier = contains(options, 'tier') ? options.tier : 'Standard'
 var linkedBackend = contains(options, 'linkedBackend')
 var backendType = linkedBackend && contains(options.linkedBackend, 'type') ? options.linkedBackend.type : ''
 var backendName = linkedBackend && contains(options.linkedBackend, 'name') ? options.linkedBackend.name : ''

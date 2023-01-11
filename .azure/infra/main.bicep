@@ -72,10 +72,10 @@ module containerEnvironment './modules/container-env.bicep' = {
   }
 }
 
-var configContainers = contains(config, 'containers') ? config.containers : []
-var containerNames = map(configContainers, c => c.name)
+var containersConfig = contains(config, 'containers') ? config.containers : []
+var containerNames = map(containersConfig, c => c.name)
 
-module containers './modules/container.bicep' = [for container in configContainers: {
+module containers './modules/container.bicep' = [for container in containersConfig: {
   name: 'container-${container.name}'
   scope: resourceGroup()
   params: {
@@ -89,10 +89,10 @@ module containers './modules/container.bicep' = [for container in configContaine
   dependsOn: [logs, registry, containerEnvironment]
 }]
 
-var configWebsites = contains(config, 'websites') ? config.websites : []
-var websiteNames = map(configWebsites, w => w.name)
+var websitesConfig = contains(config, 'websites') ? config.websites : []
+var websiteNames = map(websitesConfig, w => w.name)
 
-module websites './modules/website.bicep' = [for website in configWebsites: {
+module websites './modules/website.bicep' = [for website in websitesConfig: {
   name: 'website-${website.name}'
   scope: resourceGroup()
   params: {

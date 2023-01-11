@@ -22,14 +22,6 @@ param tags object = {}
 // Resource-specific parameters
 // ---------------------------------------------------------------------------
 
-@description('Specify the service tier')
-@allowed([
-  'Basic'
-  'Standard'
-  'Premium'
-])
-param tier string = 'Basic'
-
 @description('Registry options')
 param options object = {}
 
@@ -37,6 +29,8 @@ param options object = {}
 // Options
 // ---------------------------------------------------------------------------
 
+// Allowed: 'Basic', 'Standard', 'Premium'
+var tier = contains(options, 'tier') ? options.tier : 'Basic'
 var anonymousPullEnabled = contains(options, 'anonymousPullEnabled') ? options.anonymousPullEnabled : false
 
 // ---------------------------------------------------------------------------
