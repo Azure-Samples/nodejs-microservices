@@ -7,7 +7,7 @@
 set -euo pipefail
 cd $(dirname ${BASH_SOURCE[0]})
 
-target_folder=_packages
+target_folder=packages
 
 cd ..
 mkdir $target_folder
