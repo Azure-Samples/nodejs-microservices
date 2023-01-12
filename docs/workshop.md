@@ -1,10 +1,10 @@
 ---
 short_title: Node.js Microservices
-description: Discover the fundamentals of microservices architecture and how to implement them from code to production, using Node.js, Docker and Azure.
+description: Discover the fundamentals of microservices architecture and how to implement it from code to production, using Node.js, Docker and Azure.
 type: workshop
 authors: Yohan Lasorsa
 contacts: '@sinedied'
-# banner_url: assets/pwa-banner.jpg
+# banner_url: assets/todo-banner.jpg
 duration_minutes: 180
 audience: students, devs
 level: intermediate
@@ -12,7 +12,7 @@ tags: node.js, containers, docker, azure, static web apps, javascript, typescrip
 published: false
 wt_id: 0000-javascript-yolasors
 sections_title:
-  - Introduction
+  - Welcome
 ---
 
 # Microservices in practice with Node.js, Docker and Azure
@@ -57,25 +57,25 @@ We'll cover a lot of differents topics and concepts here, but don't worry, we'll
 
 <div class="info" data-title="note">
 
-> This workshop is designed to be modular: when indicated at the top, some of the parts can be skipped so that you can focus on the topics that interest you the most.
+> This workshop is designed to be modular: when indicated, some of the parts can be skipped so that you can focus on the topics that interest you the most.
 
 </div>
 
 ### Application architecture
 
-Here's the architecture we'll build in this workshop:
+Here's the architecture of the application we'll build in this workshop:
 
 ![Application architecture](./assets/architecture.drawio.png)
 
-Our application is split in 4 main components:
+Our application is split into 4 main components:
 
-- **A website**, built with plain HTML/JavaScript using [Vite](https://vitejs.dev/) and hosted on [Azure Static Web Apps](https://azure.microsoft.com/services/app-service/static/). This website will allow users to login with GitHub, save their preferences and roll dices.
+1. **A website**, built with plain HTML/JavaScript using [Vite](https://vitejs.dev/) and hosted on [Azure Static Web Apps](https://azure.microsoft.com/services/app-service/static/). This website will allow users to login with GitHub, save their preferences and roll dices.
 
-- **A settings service**, built with [Fastify](https://www.fastify.io/) and hosted on [Azure Container Apps](https://azure.microsoft.com/services/app-service/containers/), using [Azure Cosmos DB](https://azure.microsoft.com/services/cosmos-db/) for its database. This internal API will allow users to save and retrieve their preferences.
+2. **A settings service**, built with [Fastify](https://www.fastify.io/) and hosted on [Azure Container Apps](https://azure.microsoft.com/services/app-service/containers/), using [Azure Cosmos DB](https://azure.microsoft.com/services/cosmos-db/) for its database. This internal API will allow users to save and retrieve their preferences.
 
-- **A dice rolls service**, built with [NestJS](https://nestjs.com/) and hosted on [Azure Container Apps](https://azure.microsoft.com/services/app-service/containers/), , using [Azure Cosmos DB](https://azure.microsoft.com/services/cosmos-db/) for its database. This internal API will allow users to roll dices and get an history of the last rolls.
+3. **A dice rolls service**, built with [NestJS](https://nestjs.com/) and hosted on [Azure Container Apps](https://azure.microsoft.com/services/app-service/containers/), , using [Azure Cosmos DB](https://azure.microsoft.com/services/cosmos-db/) for its database. This internal API will allow users to roll dices and get an history of the last rolls.
 
-- **A gateway service**, built with [Express](https://expressjs.com/) and hosted on [Azure Container Apps](https://azure.microsoft.com/services/app-service/containers/). This publicly exposed API will act as a proxy between the website and the other APIs, and will check user authentication.
+4. **A gateway service**, built with [Express](https://expressjs.com/) and hosted on [Azure Container Apps](https://azure.microsoft.com/services/app-service/containers/). This publicly exposed API will act as a proxy between the website and the other APIs, and will check user authentication.
 
 The user authentication will be provided by [Azure Static Web Apps](https://azure.microsoft.com/services/app-service/static/), which will also host our website. It will rely on [GitHub OAuth](https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps) as an identity provider.
 
@@ -104,7 +104,7 @@ We'll see how to address these challenges in this workshop.
 Before starting the development, we'll need to setup our project and development environment. This includes:
 
 - Creating a new project on GitHub based on a template
-- Using a prepared dev container environment on either [GitHub Codespaces](https://github.com/features/codespaces) or [VS Code with Dev Containers extension](https://aka.ms/vscode/ext/devcontainer)
+- Using a prepared dev container environment on either [GitHub Codespaces](https://github.com/features/codespaces) or [VS Code with Dev Containers extension](https://aka.ms/vscode/ext/devcontainer) (or a manual install of the needed tools)
 
 ### Creating the project
 
@@ -118,9 +118,9 @@ Once the fork is created, select the **Code** button, then the **Codespaces** ta
 
 This will start the creation of a dev container environment, which is a pre-configured container with all the needed tools installed. Once it's ready, you have everything you need to start coding. It even ran `npm install` for you!
 
-#### (optional) Working locally with the dev container
+#### [optional] Working locally with the dev container
 
-If you prefer to work locally, you can also run the dev container on your machine. If you're fine with using Codespaces, you can skip the optional sections.
+If you prefer to work locally, you can also run the dev container on your machine. If you're fine with using Codespaces, you can skip directly to the next section.
 
 To work on the project locally using a dev container, first you'll need to install [Docker](https://www.docker.com/products/docker-desktop) and [VS Code](https://code.visualstudio.com/), then install the [Dev Containers](https://aka.ms/vscode/ext/devcontainer) extension.
 
@@ -153,7 +153,7 @@ Once the container is ready, you will see "Dev Container: Node.js" in the bottom
 
 ![Screenshot of VS Code showing the Dev Container status](./assets/vscode-dev-container-status.png)
 
-#### (optional) Working locally without the dev container
+#### [optional] Working locally without the dev container
 
 If you want to work locally without using a dev container, you'll need to clone the project and install the following tools:
 
@@ -165,6 +165,7 @@ If you want to work locally without using a dev container, you'll need to clone 
 | Azure CLI     | [Get Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli#install) |
 | GitHub CLI    | [Get GitHub CLI](https://cli.github.com/manual/installation) |
 | Azure Static Web Apps CLI | [Get Azure Static Web Apps CLI](https://github.com/Azure/static-web-apps-cli#installing-the-cli-with-npm-yarn-or-pnpm) |
+| pino-pretty log formatter | [Get pino-pretty](https://github.com/pinojs/pino-pretty#install) |
 | Bash v3+      | [Get bash](https://www.gnu.org/software/bash/) (Windows users can use **Git bash** that comes with Git) |
 | Perl v5+      | [Get Perl](https://www.perl.org/get.html) |
 | jq            | [Get jq](https://stedolan.github.io/jq/download) |
@@ -191,7 +192,7 @@ jq --version
 The project template you forked is a monorepo, a single repository containing multiple projects. It's organized as follows (for the most important files):
 
 ```
-.azure/           # Azure infrastructure templates and scripts (we'll detail it later)
+.azure/           # Azure infrastructure templates and scripts
 .devcontainer/    # Dev container configuration
 packages/         # The different services of our app
 |- gateway-api/   # The API gateway, created with generator-express
@@ -210,9 +211,9 @@ Otherwise, you can use your regular `npm` commands in any project folder and it 
 
 ### About the services
 
-The differents services of our app were generated using the respective CLI or generator of the frameworks we'll be using, with very few modifications so we start working quickly on the most important parts of the workshop.
+We generated the base code of our differents services with the respective CLI or generator of the frameworks we'll be using, with very few modifications made so we can start working quickly on the most important parts of the workshop.
 
-The only changes we made to the generated code is to remove files we don't need, configure the ports for each API, and setup [pino-http](https://github.com/pinojs/pino-http) as the logger to have a consistent logging format across all the services.
+The only changes we made to the generated code is to remove the files we don't need, configure the ports for each API, and setup [pino-http](https://github.com/pinojs/pino-http) as the logger to have a consistent logging format across all the services.
 
 <div class="info" data-title="note">
 
@@ -224,13 +225,111 @@ The only changes we made to the generated code is to remove files we don't need,
 
 ## Settings API
 
-- fastify
-- create mock DB and service (in memory + simulated delay)
+<div class="tip" data-title="note">
+
+> If you want to skip the Settings API implementation and jump directly to the next section, run this command to get the completed code directly: `TODO`
+
+</div>
+
+We'll start by creating the Settings API, which will be responsible for storing the settings of each user. 
+
+It will be a simple API with two endpoints:
+- `PUT /settings/{user_id}`: update settings of a user
+- `GET /settings/{user_id}`: retrieve settings of a user
+
+The settings data we'll store for each user will be the number of sides of the dice they want to use, using the following format:
+
+```json
+{
+  "sides": 6
+}
+```
+
+### Introducing Fastify
+
+We'll be using [Fastify](https://www.fastify.io/) to create our Settings API. Fastify is a web framework highly focused on providing the best developer experience with the least overhead and a powerful plugin architecture.
+
+It's very similar to Express, but it's much faster and more lightweight making it a good choice for microservices. It also comes with first-class TypeScript support, though we'll be using here the default JavaScript template.
+
+### Creating the database plugin
+
+To store the settings of each user, we'll need at some point a database. For now, we'll start by using a mock with an in-memory database, and we'll add the proper connection later when our database will be deployed.
+
+Let's start by creating a plugin for Fastify to make it easy to use in our API.
+
+Create a new file `packages/settings-api/plugins/database.js` with the following content:
+
+```js
+import fp from 'fastify-plugin'
+
+// the use of fastify-plugin is required to be able
+// to export the decorators to the outer scope
+
+export default fp(async function (fastify, opts) {
+  fastify.decorate('db', new MockDatabase());
+});
+```
+
+Plugins in Fastify are just functions that receive the Fastify instance and the options passed to the plugin. All plugins within the `plugins/` folder will be automatically loaded by Fastify when the server starts.
+
+Using the `decorate` method, we can add properties to the Fastify instance, which will be available in all the routes of our API. We use it here to provide a `db` property that will be an instance of our database service.
+
+Now we'll implement the `MockDatabase` class. Add this code at the bottom of the file:
+
+```js
+class MockDatabase {
+  constructor() {
+    this.db = {};
+  }
+
+  async saveSettings(userId, settings) {
+    await this.#delay();
+    this.db[userId] = settings;
+  }
+  
+  async getSettings(userId) {
+    await this.#delay();
+    return this.db[userId];
+  }
+
+  async #delay() {
+    return new Promise(resolve => setTimeout(resolve, 10));
+  }
+}
+```
+
+<div class="tip" data-title="tip">
+
+> We are using the **async/await** keywords that enable asynchronous, promise-based behavior to be written like regular synchronous code. You can read more about it in the [MDN documentation](https://developer.mozilla.org/docs/Learn/JavaScript/Asynchronous/Promises#async_and_await).
+
+</div>
+
+As you can see, we are using a simple object to store the settings of each user. We are also adding a delay of 10ms to simulate the latency of a real database call.
+
+<div class="tip" data-title="tip">
+
+> Did you noticed the `#` at the beginning of the `#delay()` method? This new feature of JavaScript means that this method is private, and only class members are allowed to call it. You can read more about it in the [MDN documentation](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Classes/Private_class_fields).
+
+</div>
+
+### Creating the routes
+
+Now that we have our database plugin, we can create the routes for our API.
+
 - PUT /settings/{user_id} { dice_faces: 6 }
 - GET /settings/{user_id}
+
+### Testing our API
+
 - test with REST client/curl
-- Dockerfile
-- test
+
+### Creating the Dockerfile
+
++ .dockerignore
+
+### Testing our Docker image
+
+- test with REST client/curl
 
 ---
 
