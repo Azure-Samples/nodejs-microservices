@@ -55,7 +55,7 @@ In this workshop we'll build a simple dice rolling application, with a website a
 
 We'll cover a lot of differents topics and concepts here, but don't worry, we'll take it step by step. 
 
-<div class="note" data-title="note">
+<div class="info" data-title="note">
 
 > This workshop is designed to be modular: when indicated at the top, some of the parts can be skipped so that you can focus on the topics that interest you the most.
 
@@ -188,12 +188,37 @@ jq --version
 
 ## Overview of the project
 
-files and folders
+The project template you forked is a monorepo, a single repository containing multiple projects. It's organized as follows (for the most important files):
 
-#### NPM workspace
+```
+.azure/           # Azure infrastructure templates and scripts (we'll detail it later)
+.devcontainer/    # Dev container configuration
+packages/         # The different services of our app
+|- gateway-api/   # The API gateway, created with generator-express
+|- settings-api/  # The settings API, created with Fastify CLI
+|- dice-api/      # The dice API, created with NestJS CLI
++- website/       # The website, created with Vite CLI
+api.http          # HTTP requests to test our APIs
+package.json      # NPM workspace configuration
+```
 
-- explain
-- benefits
+As we'll be using Node.js to build our APIs and website, we had setup a [NPM workspace](https://docs.npmjs.com/cli/using-npm/workspaces) to manage the dependencies of all the projects in a single place. This means that when you run `npm install` in the root of the project, it will install all the dependencies of all the projects and make it easier to work in a monorepo.
+
+For example, you can run `npm run <script_name> --workspaces` in the root of the project to run a script in all the projects, or `npm run <script_name> --workspace=packages/gateway-api` to run a script for a specific project. 
+
+Otherwise, you can use your regular `npm` commands in any project folder and it will work as usual.
+
+### About the services
+
+The differents services of our app were generated using the respective CLI or generator of the frameworks we'll be using, with very few modifications so we start working quickly on the most important parts of the workshop.
+
+The only changes we made to the generated code is to remove files we don't need, configure the ports for each API, and setup [pino-http](https://github.com/pinojs/pino-http) as the logger to have a consistent logging format across all the services.
+
+<div class="info" data-title="note">
+
+> If you want to see how the services were generated and the details of the changes we made, you can look at [this script](https://github.com/Azure-Samples/nodejs-microservices/blob/main/scripts/create-projects.sh) we used to generate the projects.
+
+</div>
 
 ---
 
