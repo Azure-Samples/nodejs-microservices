@@ -20,6 +20,8 @@ cd $target_folder
 echo "Creating settings-api project..."
 npx -y fastify-cli@5.7.0 generate settings-api --esm
 rm -rf settings-api/routes/example
+rm -rf settings-api/test/routes/example.test.js
+rm -rf settings-api/test/plugins/support.test.js
 perl -i -pe "s/fastify start -l info app.js/fastify start -l info app.js -a 0.0.0.0 -p 4001/" settings-api/package.json
 perl -i -pe "s/fastify start -w -l info -P app.js/fastify start -w -l info -P app.js -p 4001/" settings-api/package.json
 
