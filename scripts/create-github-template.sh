@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 ##############################################################################
-# Usage: ./create-github-template.sh
+# Usage: ./create-github-template.sh [--local]
 # Creates the project template and push it to GitHub.
 ##############################################################################
 
@@ -12,7 +12,7 @@ TEMPLATE_HOME=/tmp/azure-nodejs-microservices-template
 TEMPLATE_REPO=git@github.com:sinedied/azure-nodejs-microservices-template.git
 
 echo "Preparing GitHub project template..."
-rm -rf /tmp/azure-nodejs-microservices-template
+rm -rf $TEMPLATE_HOME
 mkdir -p $TEMPLATE_HOME
 find . -type d -not -path '*node_modules*' -not -path '*.git/*' -not -path './packages*' -exec mkdir -p '{}' "$TEMPLATE_HOME/{}" ';'
 find . -type f -not -path '*node_modules*' -not -path '*.git/*' -not -path './packages*' -exec cp -r '{}' "$TEMPLATE_HOME/{}" ';'
@@ -55,13 +55,18 @@ commit_sha="$(git rev-parse HEAD)"
 
 ' > .azure/deploy.sh
 
-# Update git repo
-git init
-git remote add origin $TEMPLATE_REPO
-git add .
-git commit -m "chore: initial commit"
-git push -u origin main --force
+if [[ ${1-} == "--local" ]]; then
+  echo "Local mode: skipping GitHub push."
+  open $TEMPLATE_HOME
+else
+  # Update git repo
+  git init
+  git remote add origin $TEMPLATE_REPO
+  git add .
+  git commit -m "chore: initial commit"
+  git push -u origin main --force
 
-rm -rf $TEMPLATE_HOME
+  rm -rf $TEMPLATE_HOME
+fi
 
 echo "Successfully updated project template."
