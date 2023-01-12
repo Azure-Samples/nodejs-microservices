@@ -41,7 +41,7 @@ We will build a complete application including a website with authentication and
 |----------------|------------------------------------------------------|
 | GitHub account | [Get a free GitHub account](https://github.com/join) |
 | Azure account  | [Get a free Azure account](https://azure.microsoft.com/free) |
-| A web browser  | https://www.microsoft.com/edge |
+| A web browser  | [Get Microsoft Edge](https://www.microsoft.com/edge) |
 
 We'll use [GitHub Codespaces](https://github.com/features/codespaces) to have an instant dev environment already prepared for this workshop.
 
