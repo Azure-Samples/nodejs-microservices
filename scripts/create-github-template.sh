@@ -8,6 +8,7 @@ set -euo pipefail
 cd $(dirname ${BASH_SOURCE[0]})
 cd ..
 
+BASE_DIR=$(pwd)
 TEMPLATE_HOME=/tmp/nodejs-microservices-template
 TEMPLATE_REPO=git@github.com:azure-samples/nodejs-microservices-template.git
 
@@ -32,7 +33,7 @@ rm -rf docs
 rm -rf .azure/.*.env
 rm -rf .azure/_*.sh
 mkdir -p docs/assets
-cp docs/assets/architecture.drawio.png docs/assets/architecture.drawio.png
+cp $BASE_DIR/docs/assets/architecture.drawio.png docs/assets/architecture.drawio.png
 
 # Build script
 echo -e '#!/usr/bin/env bash
