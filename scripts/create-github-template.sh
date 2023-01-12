@@ -8,8 +8,8 @@ set -euo pipefail
 cd $(dirname ${BASH_SOURCE[0]})
 cd ..
 
-TEMPLATE_HOME=/tmp/azure-nodejs-microservices-template
-TEMPLATE_REPO=git@github.com:sinedied/azure-nodejs-microservices-template.git
+TEMPLATE_HOME=/tmp/nodejs-microservices-template
+TEMPLATE_REPO=git@github.com:azure-samples/nodejs-microservices-template.git
 
 echo "Preparing GitHub project template..."
 rm -rf $TEMPLATE_HOME
@@ -31,6 +31,8 @@ rm -rf scripts
 rm -rf docs
 rm -rf .azure/.*.env
 rm -rf .azure/_*.sh
+mkdir -p docs/assets
+cp docs/assets/architecture.drawio.png docs/assets/architecture.drawio.png
 
 # Build script
 echo -e '#!/usr/bin/env bash
