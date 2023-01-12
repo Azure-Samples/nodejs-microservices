@@ -38,39 +38,14 @@ We will build a complete application including a website with authentication and
 ## Prerequisites
 
 | | |
-|---------------|-----------------|
-| GitHub account | https://github.com/join |
-| Azure account | TODO https://azcheck.in/sno230125
-| A chromium-based browser | https://www.microsoft.com/edge |
+|----------------|------------------------------------------------------|
+| GitHub account | [Get a free GitHub account](https://github.com/join) |
+| Azure account  | [Get a free Azure account](https://azure.microsoft.com/free) |
+| A web browser  | https://www.microsoft.com/edge |
 
 We'll use [GitHub Codespaces](https://github.com/features/codespaces) to have an instant dev environment already prepared for this workshop.
 
-TODO warning free tier codespaces
-
-### Working locally
-
-If you prefer to work locally, you can use the [dev container](https://code.visualstudio.com/docs/devcontainers/containers) feature of VS Code to replicate the environment on your machine.
-
-Here's what you need to install on your machine:
-
-| | |
-|---------------|-----------------|
-| Git           | https://git-scm.com |
-| Docker v20+   | TODO |
-| Node.js v18+ (optional)  | https://nodejs.org |
-| VS Code | https://aka.ms/get-vscode |
-| Dev Containers extension for VS Code | TODO |
-
-TODO instruction reload container
-
-
-You can test your setup by opening a terminal and typing:
-
-```sh
-git --version
-docker --version
-node --version
-```
+If you prefer to work locally, we'll also provide instructions to setup a local dev environment using either VS Code with a [dev container](https://aka.ms/vscode/ext/devcontainer) or a manual install of the needed tools.
 
 ---
 
@@ -80,7 +55,7 @@ In this workshop we'll build a simple dice rolling application, with a website a
 
 We'll cover a lot of differents topics and concepts here, but don't worry, we'll take it step by step. 
 
-<div class="note">
+<div class="note" data-title="note">
 
 > This workshop is designed to be modular: when indicated at the top, some of the parts can be skipped so that you can focus on the topics that interest you the most.
 
@@ -90,17 +65,17 @@ We'll cover a lot of differents topics and concepts here, but don't worry, we'll
 
 Here's the architecture we'll build in this workshop:
 
-![Application architecture](./docs/assets/architecture.drawio.png)
+![Application architecture](./assets/architecture.drawio.png)
 
 Our application is split in 4 main components:
 
-- A website, built with plain HTML/JavaScript using [Vite](https://vitejs.dev/) and hosted on [Azure Static Web Apps](https://azure.microsoft.com/services/app-service/static/). This website will allow users to login with GitHub, save their preferences and roll dices.
+- **A website**, built with plain HTML/JavaScript using [Vite](https://vitejs.dev/) and hosted on [Azure Static Web Apps](https://azure.microsoft.com/services/app-service/static/). This website will allow users to login with GitHub, save their preferences and roll dices.
 
-- A settings service, built with [Fastify](https://www.fastify.io/) and hosted on [Azure Container Apps](https://azure.microsoft.com/services/app-service/containers/), using [Azure Cosmos DB](https://azure.microsoft.com/services/cosmos-db/) for its database. This internal API will allow users to save and retrieve their preferences.
+- **A settings service**, built with [Fastify](https://www.fastify.io/) and hosted on [Azure Container Apps](https://azure.microsoft.com/services/app-service/containers/), using [Azure Cosmos DB](https://azure.microsoft.com/services/cosmos-db/) for its database. This internal API will allow users to save and retrieve their preferences.
 
-- A dice rolls service, built with [NestJS](https://nestjs.com/) and hosted on [Azure Container Apps](https://azure.microsoft.com/services/app-service/containers/), , using [Azure Cosmos DB](https://azure.microsoft.com/services/cosmos-db/) for its database. This internal API will allow users to roll dices and get an history of the last rolls.
+- **A dice rolls service**, built with [NestJS](https://nestjs.com/) and hosted on [Azure Container Apps](https://azure.microsoft.com/services/app-service/containers/), , using [Azure Cosmos DB](https://azure.microsoft.com/services/cosmos-db/) for its database. This internal API will allow users to roll dices and get an history of the last rolls.
 
-- A gateway service, built with [Express](https://expressjs.com/) and hosted on [Azure Container Apps](https://azure.microsoft.com/services/app-service/containers/). This publicly exposed API will act as a proxy between the website and the other APIs, and will check user authentication.
+- **A gateway service**, built with [Express](https://expressjs.com/) and hosted on [Azure Container Apps](https://azure.microsoft.com/services/app-service/containers/). This publicly exposed API will act as a proxy between the website and the other APIs, and will check user authentication.
 
 The user authentication will be provided by [Azure Static Web Apps](https://azure.microsoft.com/services/app-service/static/), which will also host our website. It will rely on [GitHub OAuth](https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps) as an identity provider.
 
@@ -108,24 +83,16 @@ The user authentication will be provided by [Azure Static Web Apps](https://azur
 
 Microservices architecture is a way to build applications by splitting them into small, independent services. Each service is responsible for a specific part of the application, and can be developed, deployed and scaled independently.
 
-Microservices architecture has many benefits:
-
+Microservices have many benefits:
 - **Scalability**: each service can be scaled independently, and can be scaled up or down depending on the load.
-
 - **Resilience**: if one service fails, the others will still be available.
-
 - **Maintainability**: each service can be developed and deployed independently, by different teams, and can be replaced by another service if needed.
-
 - **Flexibility**: each service can be developed with a different technology, and can be replaced by another service if needed.
 
 But there are also some challenges:
-
 - **Complexity**: microservices architecture is more complex than a monolithic application, and requires more infrastructure and tooling.
-
 - **Communication**: services need to communicate with each other, and this can be induce latency and network issues.
-
 - **Debugging**: when a service fails, it can be hard to find the root cause.
-
 - **Monitoring**: it can be difficult to monitor the health of all the services, and detect issues.
 
 We'll see how to address these challenges in this workshop.
@@ -141,17 +108,89 @@ Before starting the development, we'll need to setup our project and development
 
 ### Creating the project
 
-Open [this GitHub repository](https://github.com/azure-samples/nodejs-microservices-template), select the **Code** button, then the **Codespaces** tab and click on **Create Codespaces on main**.
+Open [this GitHub repository](https://github.com/azure-samples/nodejs-microservices-template), select the **Fork** button and click on **Create fork** to create a copy of the project in your own GitHub account.
 
-![Screenshot of GitHub showing the Codespaces creation](./docs/assets/create-codespaces.png)
+![Screenshot of GitHub showing the Fork button](./assets/fork-project.png)
 
+Once the fork is created, select the **Code** button, then the **Codespaces** tab and click on **Create Codespaces on main**.
 
-The first step
+![Screenshot of GitHub showing the Codespaces creation](./assets/create-codespaces.png)
 
-- GitHub template
-+ clone locally if needed
+This will start the creation of a dev container environment, which is a pre-configured container with all the needed tools installed. Once it's ready, you have everything you need to start coding. It even ran `npm install` for you!
 
-### NPM workspace
+#### (optional) Working locally with the dev container
+
+If you prefer to work locally, you can also run the dev container on your machine. If you're fine with using Codespaces, you can skip the optional sections.
+
+To work on the project locally using a dev container, first you'll need to install [Docker](https://www.docker.com/products/docker-desktop) and [VS Code](https://code.visualstudio.com/), then install the [Dev Containers](https://aka.ms/vscode/ext/devcontainer) extension.
+
+<div class="tip" data-title="tip">
+
+> You can learn more about Dev Containers in [this video series](https://learn.microsoft.com/shows/beginners-series-to-dev-containers/).
+[Check the website](https://containers.dev) and [the specification](https://github.com/devcontainers/spec) if you want to learn more about Dev Containers.
+
+</div>
+
+After that you need to clone the project on your machine:
+
+1. Select the **Code** button, then the **Local** tab and copy your repository url.
+
+![Screenshot of GitHub showing the repository URL](./assets/github-clone.png)
+
+2. Open a terminal and run:
+
+```bash
+git clone <your_repo_url>
+```
+
+3. Open the project in VS Code, open the **command palette** with `Ctrl+Shift+P` (`Command+Shift+P` on Mac) and enter **Reopen in Container**.
+
+![Screenshot of VS Code showing the "reopen in container" command](./assets/vscode-reopen-in-container.png)
+
+The first time it will take some time to download and setup the container image, meanwhile you can go ahead and read the next sections.
+
+Once the container is ready, you will see "Dev Container: Node.js" in the bottom left corner of VSCode:
+
+![Screenshot of VS Code showing the Dev Container status](./assets/vscode-dev-container-status.png)
+
+#### (optional) Working locally without the dev container
+
+If you want to work locally without using a dev container, you'll need to clone the project and install the following tools:
+
+| | |
+|---------------|--------------------------------|
+| Git           | [Get Git](https://git-scm.com) |
+| Docker v20+   | [Get Docker](https://docs.docker.com/get-docker) |
+| Node.js v18+  | [Get Node.js](https://nodejs.org) |
+| Azure CLI     | [Get Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli#install) |
+| GitHub CLI    | [Get GitHub CLI](https://cli.github.com/manual/installation) |
+| Azure Static Web Apps CLI | [Get Azure Static Web Apps CLI](https://github.com/Azure/static-web-apps-cli#installing-the-cli-with-npm-yarn-or-pnpm) |
+| Bash v3+      | [Get bash](https://www.gnu.org/software/bash/) (Windows users can use **Git bash** that comes with Git) |
+| Perl v5+      | [Get Perl](https://www.perl.org/get.html) |
+| jq            | [Get jq](https://stedolan.github.io/jq/download) |
+| A code editor | [Get VS Code](https://aka.ms/get-vscode) |
+
+You can test your setup by opening a terminal and typing:
+
+```sh
+git --version
+docker --version
+node --version
+az --version
+gh --version
+swa --version
+bash --version
+perl --version
+jq --version
+```
+
+---
+
+## Overview of the project
+
+files and folders
+
+#### NPM workspace
 
 - explain
 - benefits
