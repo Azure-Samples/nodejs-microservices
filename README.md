@@ -9,7 +9,7 @@ Discover the fundamentals of microservices architecture and how to implement the
 - Docker v20+
 - An Azure account ([sign up for free here](https://azure.microsoft.com/free/?WT.mc_id=javascript-0000-yolasors))
 
-You can use [GitHub Codespaces](https://github.com/features/codespaces) to work on this project directly from your browser: select **Code**, then the **Codespaces** tab and click on **Create Codespaces on main**.
+You can use [GitHub Codespaces](https://github.com/features/codespaces) to work on this project directly from your browser: select the **Code** button, then the **Codespaces** tab and click on **Create Codespaces on main**.
 
 You can also use the [Dev Containers extension for VS Code](https://aka.ms/vscode/ext/devcontainer) to work locally using a ready-to-use dev environment.
 
