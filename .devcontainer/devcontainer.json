@@ -17,21 +17,21 @@
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [4280],
+	"forwardPorts": [4001, 4002, 4003, 4280],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "npm i -g npm@latest pino-pretty && npm install",
+	"postCreateCommand": "npm i -g npm@latest pino-pretty fuzz-run && npm install",
 
 	// Configure tool-specific properties.
 	"customizations": {
 		"vscode": {
 			"extensions": [
-				"EditorConfig.EditorConfig",
 				"humao.rest-client",
-				"IronGeek.vscode-env",
 				"ms-azuretools.vscode-bicep",
 				"ms-azuretools.vscode-cosmosdb",
-				"ms-azuretools.vscode-azurecontainerapps"
+				"ms-azuretools.vscode-azurecontainerapps",
+				"EditorConfig.EditorConfig",
+				"IronGeek.vscode-env"
 			]
 		}
 	}
