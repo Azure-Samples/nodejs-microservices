@@ -231,9 +231,9 @@ The only changes we made to the generated code is to remove the files we don't n
 
 ---
 
-<div class="warning" data-title="skip notice">
+<div class="info" data-title="skip notice">
 
-> If you want to skip the Settings API implementation and jump directly to the next section, run this command to get the completed code directly: `TODO`
+> If you want to skip the Settings API implementation and jump directly to the next section, run this command in the terminal to get the completed code directly: `TODO`
 
 </div>
 
@@ -560,9 +560,9 @@ It can be a good idea to now commit the changes to the repository. Commits are c
 
 ---
 
-<div class="warning" data-title="skip notice">
+<div class="info" data-title="skip notice">
 
-> If you want to skip the Dice API implementation and jump directly to the next section, run this command to get the completed code directly: `TODO`
+> If you want to skip the Dice API implementation and jump directly to the next section, run this command in the terminal to get the completed code directly: `TODO`
 
 </div>
 
