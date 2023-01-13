@@ -10,18 +10,18 @@ export interface Roll {
 @Injectable()
 export class MockDbService {
   private mockDb: Roll[] = [];
+  
+  async addRoll(roll: Roll) {
+    await this.delay();
+    this.mockDb.push(roll);
+    this.mockDb.sort((a, b) => a.timestamp - b.timestamp);
+  }
 
   async getLastRolls(max: number, sides: number) {
     await this.delay();
     return this.mockDb
       .filter((roll) => roll.sides === sides)
       .slice(-max);
-  }
-
-  async addRoll(roll: Roll) {
-    await this.delay();
-    this.mockDb.push(roll);
-    this.mockDb.sort((a, b) => a.timestamp - b.timestamp);
   }
 
   private async delay() {
@@ -48,6 +48,10 @@ export class DbService {
     this.rolls = container;
   }
 
+  async addRoll(roll: Roll) {
+    await this.rolls.items.create(roll);
+  }
+
   async getLastRolls(max: number, sides: number) {
     const { resources } = await this.rolls.items
       .query({
@@ -59,9 +63,5 @@ export class DbService {
       })
       .fetchAll();
     return resources.sort((a, b) => a.timestamp - b.timestamp);
-  }
-
-  async addRoll(roll: Roll) {
-    await this.rolls.items.create(roll);
   }
 }
