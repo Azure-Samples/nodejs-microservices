@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node ./bin/www",
     "docker:build": "docker build --tag gateway-api --file ./Dockerfile ../..",
-    "docker:run": "docker run --rm -p 4003:4003 gateway-api"
+    "docker:run": "docker run --rm --publish 4003:4003 gateway-api"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
