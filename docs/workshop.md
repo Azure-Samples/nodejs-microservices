@@ -11,6 +11,7 @@ level: intermediate
 tags: node.js, containers, docker, azure, static web apps, javascript, typescript, microservices
 published: false
 wt_id: javascript-0000-yolasors
+oc_id: AID3057430
 sections_title:
   - Welcome
 ---
@@ -118,6 +119,12 @@ Once the fork is created, select the **Code** button, then the **Codespaces** ta
 ![Screenshot of GitHub showing the Codespaces creation](./assets/create-codespaces.png)
 
 This will start the creation of a dev container environment, which is a pre-configured container with all the needed tools installed. Once it's ready, you have everything you need to start coding. It even ran `npm install` for you!
+
+<div class="info" data-title="note">
+
+> You don't have to worry about Codespaces usage cost for this workshop, as it's free for forks of our template repository. For personal usage, Codespaces includes up to 60 hours of free usage per month for all GitHub users, see [the pricing details here](https://github.com/features/codespaces).
+
+</div>
 
 #### [optional] Working locally with the dev container
 
@@ -339,11 +346,11 @@ Just like plugins, routes are also functions that receive the Fastify instance a
 We'll start by adding the `PUT /settings/{user_id}` route. Add this code inside the function we just created:
 
 ```js
-  fastify.put('/:userId', async function (request, reply) {
-    request.log.info(`Saving settings for user ${request.params.userId}`);
-    await fastify.db.saveSettings(request.params.userId, request.body);
-    reply.code(204);
-  });
+fastify.put('/:userId', async function (request, reply) {
+  request.log.info(`Saving settings for user ${request.params.userId}`);
+  await fastify.db.saveSettings(request.params.userId, request.body);
+  reply.code(204);
+});
 ```
 
 <div class="tip" data-title="tip">
@@ -367,24 +374,24 @@ We should validate the data before saving it, and return an error if the data is
 We can specify the JSON Schema for the request body the optional route options object. Add this code just before the route definition:
 
 ```js
-  const putOptions = {
-    schema: {
-      body: {
-        type: 'object',
-        properties: {
-          sides: { type: 'number' }
-        }
+const putOptions = {
+  schema: {
+    body: {
+      type: 'object',
+      properties: {
+        sides: { type: 'number' }
       }
     }
   }
+}
 ```
 
 Then add the `putOptions` object as the second parameter of the `fastify.put()` method:
 
 ```js
-  fastify.put('/:userId', putOptions, async function (request, reply) {
-    // ...
-  });
+fastify.put('/:userId', putOptions, async function (request, reply) {
+  // ...
+});
 ```
 
 Now fastify will take care of validating the request body, and return an error if the data is invalid.
@@ -394,13 +401,13 @@ Now fastify will take care of validating the request body, and return an error i
 Now let's add another route to retrieve the settings of a user. Add this code below the `PUT` route definition:
 
 ```js
-  fastify.get('/:userId', async function (request, reply) {
-    const settings = await fastify.db.getSettings(request.params.userId);
-    if (settings) {
-      return settings;
-    }
-    return { sides: 6 };
-  });
+fastify.get('/:userId', async function (request, reply) {
+  const settings = await fastify.db.getSettings(request.params.userId);
+  if (settings) {
+    return settings;
+  }
+  return { sides: 6 };
+});
 ```
 
 This time we are using the `GET` HTTP verb, and we are returning the settings of the user if they exist, or a default value if they don't.
@@ -435,33 +442,33 @@ Open the file `api.http` file and have a look at the content. We defined a few v
 
 ```http
 [<METHOD>] <URL> [<HTTP_VERSION>]
-[<HEADERS>]
+[<headers>]
 
-[<BODY>]
+[<body>]
 ```
 
 All sections between square brackets are optional. Alternatively, the `curl` syntax is also supported if you prefer it.
 You can separate different requests in a file using `###`.
 
-Now click on the **Send Request** text below the `# Get user settings` comment:
+Now click on the **Send Request** text below the `# Get user settings` comment under the "Setting API" section:
 
 ![Screenshot showing how to send a request in the .http file](./assets/fastify-send-request.png)
 
-You should see the following response in the **Response** tab, returung the default settings value:
+You should see the following response in the **Response** tab, returning the default settings value:
 
 ![Screenshot showing the GET response](./assets/fastify-get-response.png)
-
-<div class="tip" data-title="tip">
-
-> Using the REST client extension is not mandatory, you can use any other tool you want to send requests to your API. For example, you can use [curl](https://curl.se/) or [Postman](https://www.postman.com/).
-
-</div>
 
 Then click on the **Send Request** text below the `# Update user settings` comment, and check that you receive a `204` status code in the response.
 
 Finally, try the `# Get user settings` request again, and you should observe the updated settings.
 
 If everything works as expected, you can now stop the server by pressing `Ctrl+C` in the terminal.
+
+<div class="tip" data-title="tip">
+
+> Using the REST client extension is not mandatory, you can use any other tool you want to send requests to your API. For example, you can use [curl](https://curl.se/) or [Postman](https://www.postman.com/).
+
+</div>
 
 ### Creating the Dockerfile
 
@@ -482,18 +489,18 @@ EXPOSE 4001
 CMD [ "npm", "start", "--workspace=settings-api" ]
 ```
 
-The first statement `FROM node:18-alpine` means that we use the [`node` image](https://hub.docker.com/_/node) as a base, with Node.js 18 installed. The `alpine` variant is a lightweight version of the image, meaning that it will result in a smaller container size, which is great for production environments.
+The first statement `FROM node:18-alpine` means that we use the [node image](https://hub.docker.com/_/node) as a base, with Node.js 18 installed. The `alpine` variant is a lightweight version of the image, that results in a smaller container size, which is great for production environments.
 
 The second statement `ENV NODE_ENV=production` sets the `NODE_ENV` environment variable to `production`. This is a convention in the Node.js ecosystem to indicate that the app is running in production mode. It enables production optimizations in most frameworks.
 
 After that, we are specifying our work directory with `WORKDIR /app`. We then need to copy our project files to the container. Because we are using NPM workspaces, it's not enough to copy the `./packages/settings-api` folder, we also need to copy the root `package.json` file and more importantly the `package-lock.json` file, to make sure that the dependencies are installed in the same version as in our local environment.
 
-Then we run the `npm ci` command a few additional parameters, to install the project dependencies:
+Then we run the `npm ci` command and a few additional parameters, to install the project dependencies:
 - `--omit=dev` tells NPM to only install the production dependencies
 - `--workspace=settings-api` tells NPM to install the dependencies only for the `settings-api` project
-- `--cache /tmp/empty-cache` tells NPM to use an empty cache folder, to avoid save the cached packages download in the container. This is not strictly necessary, but it's a good practice to avoid making our container bigger than necessary.
+- `--cache /tmp/empty-cache` tells NPM to use an empty cache folder, to avoid saving the download cache in the container. This is not strictly necessary, but it's a good practice to avoid making our container bigger than necessary.
 
-Next the `EXPOSE 4001` instruction tells Docker than our container lister on the network port `4001` at runtime.
+Next the `EXPOSE 4001` instruction tells Docker than our container listen on the network port `4001` at runtime.
 
 Finally, we use the `CMD` instruction to specify the command that will be executed when the container starts. In our case, we want to run the `npm start` command of the `settings-api` project.
 
@@ -508,7 +515,14 @@ node_modules
 
 ### Testing our Docker image
 
-You can now build our Docker image and run it locally to test it. First, let's build the image by running the following command in the terminal:
+You can now build our Docker image and run it locally to test it. First, let's 
+move to our `packages/settings-api` folder in the terminal:
+
+```bash
+cd packages/settings-api
+```
+
+Then build the image by running the following command:
 
 ```bash
 docker build --tag settings-api --file ./Dockerfile ../..
@@ -526,7 +540,7 @@ The `--rm` flag tells Docker to delete the container after it stops. The `--publ
 
 You can now test the API again using the `api.http` file just like before, to check that everything works as expected.
 
-Because we might need to run these commands often, we can add them to the scripts section of the `package.json` file:
+Because we might need to run these commands often, we can add them to the scripts section of the `packages/settings/api/package.json` file:
 
 ```json
 {
@@ -542,12 +556,118 @@ Because we might need to run these commands often, we can add them to the script
 
 This way we can use the `npm run docker:build` and `npm run docker:run` commands to build and run the image.
 
+It can be a good idea to now commit the changes to the repository. Commits are cheap, so commit early and often!
+
 ---
+
+<div class="warning" data-title="skip notice">
+
+> If you want to skip the Dice API implementation and jump directly to the next section, run this command to get the completed code directly: `TODO`
+
+</div>
 
 ## Dice API
 
-- nestjs
-- create mock DB and service (in memory + simulated delay)
+We'll now take care of creating the Dice API, which will be responsible for rolling the dices and getting the results from the last rolls. It will provide two endpoints:
+
+- `POST /rolls`: rolls a dice with the number of sides specified in the request body with the format `{ "sides": 6 }`, stores the result and returns it.
+- `GET /rolls/history?max=<max_results>&sides=<number_of_sides>`: returns at most the last `<max_results>` rolls for dices with `<number_of_sides>` sides.
+
+The result data we'll return will be in the following format for the first API:
+
+```json
+{
+  "result": 4
+}
+```
+
+And for the history API it will return an array instead:
+
+```json
+{
+  "result": [2, 4, 6]
+}
+```
+
+### Introducing NestJS
+
+This time we'll use the [NestJS](https://nestjs.com/) framework to create our API. NestJS is a framework for building efficient, scalable Node.js server-side applications. It uses TypeScript natively, and provides a lot of built-in support for dependency injection, data validation, ORM integrations, multiple transports and more.
+
+Under the hood, it's based on Express, but can also be configured to use Fastify for better performance. It also provides a CLI tool to generate new modules, controllers, services, etc, and to build and test the application easily.
+
+### Create the database service
+
+Just like we did with the Settings API, we'll start by creating a database service to store the results of the rolls. For now we'll use an in-memory mock database, but we'll later connect a proper database to persist the data.
+
+Open a new terminal and move to the `packages/dice-api` folder.
+
+```bash
+cd packages/dice-api
+```
+
+Then run the following command to create a new service called `db`:
+
+```bash
+npx nest generate service db --flat
+```
+
+The `npx` command allows us to run the `nest` CLI tool that is installed locally in the project. The `generate service` command tells the CLI to generate a new service, and the `--flat` flag allows to create the service in the `src` folder instead of creating a new folder for it.
+
+You can see that it created a new file called `db.service.ts` in the `src` folder, along with its unit test file. It also configured `app.module.ts` to provide the new service, so we can use it later with the [dependency injection](https://docs.nestjs.com/providers#dependency-injection) system.
+
+Now we'll complete the `db.service.ts` file to implement the database mock. First let's define the `Roll` interface to model how we'll store the results of the rolls. Add this after the imports:
+
+```typescript
+export interface Roll {
+  sides: number;
+  result: number;
+  timestamp: number;
+}
+```
+
+We need to store 3 things for each roll:
+- The number of sides of the dice
+- The result of the roll
+- The timestamp of when the roll was made
+
+We'll use the timestamp to sort the results by date for the history endpoint.
+
+Then, let's complete the `DbService` class to implement the mock database:
+
+```typescript
+@Injectable()
+export class DbService {
+  private mockDb: Roll[] = [];
+
+  async addRoll(roll: Roll) {
+    await this.delay();
+    this.mockDb.push(roll);
+    this.mockDb.sort((a, b) => a.timestamp - b.timestamp);
+  }
+  
+  async getLastRolls(max: number, sides: number) {
+    await this.delay();
+    return this.mockDb
+      .filter((roll) => roll.sides === sides)
+      .slice(-max);
+  }
+
+  private async delay() {
+    return new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
+```
+
+For our mock database, we'll use a simple array to store the rolls. When adding new rolls, we'll make sure that the array is sorted by timestamp, so that we can easily get the last rolls, using the `sort()` method.
+
+When getting the last rolls, we'll filter the array to only keep the rolls with the correct number of sides, and then slice the array to get the last `max` elements. The `slice()` method returns a new array, so we don't modify the original array. Note that the trick with the negative index is to get the last `max` elements, even if the array has less than `max` elements.
+
+Finally, we'll add a small delay to simulate the time it takes to access the database, just like we did in the Settings API.
+
+### Creating the routes
+
+
+
 - POST /rolls { dice_faces: } => { result: 4 } + store in DB (w/ date + faces)
 - GET  /rolls/history?count=50&dice_faces=6 => { result: [2, 4, 6] }
 - test with REST client/curl
