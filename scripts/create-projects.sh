@@ -33,8 +33,7 @@ echo "Creating dice-api project..."
 npx -y @nestjs/cli@9.1.8 new dice-api --package-manager npm --skip-git --skip-install
 perl -i -pe 's/platform-express":.*?,/$&\n    "nestjs-pino": "^3.1.1",/' dice-api/package.json
 
-echo -e "
-import { NestFactory } from '@nestjs/core';
+echo -e "import { NestFactory } from '@nestjs/core';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 
@@ -46,8 +45,7 @@ async function bootstrap() {
 bootstrap();
 " > dice-api/src/main.ts
 
-echo -e "
-import { Module } from '@nestjs/common';
+echo -e "import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -88,8 +86,7 @@ app.use('/api', router);
 module.exports = app;
 " > gateway-api/app.js
 
-echo -e "
-const express = require('express');
+echo -e "const express = require('express');
 const router = express.Router();
 
 router.get('/', function(req, res, next) {
@@ -99,8 +96,7 @@ router.get('/', function(req, res, next) {
 module.exports = router;
 " > gateway-api/routes/index.js
 
-echo -e '
-{
+echo -e '{
   "name": "gateway-api",
   "version": "0.0.0",
   "private": true,
