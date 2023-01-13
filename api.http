@@ -16,16 +16,16 @@
 # Settings API
 ##################################################################
 
+# Get user settings
+GET {{settings_api_host}}/settings/{{user_id}}
+
+###
+
 # Update user settings
 PUT {{settings_api_host}}/settings/{{user_id}}
 content-type: application/json
 
 { "sides": 12 }
-
-###
-
-# Get user settings
-GET {{settings_api_host}}/settings/{{user_id}}
 
 ##################################################################
 # Dice API
@@ -46,18 +46,18 @@ GET {{dice_api_host}}/rolls/history?max=8&sides=6
 # Gateway API
 ##################################################################
 
+# Get user settings
+GET {{gateway_host}}/api/settings
+x-ms-client-principal: {{client_principal}}
+
+###
+
 # Update user settings
 PUT {{gateway_host}}/api/settings
 content-type: application/json
 x-ms-client-principal: {{client_principal}}
 
 { "sides": 8 }
-
-###
-
-# Get user settings
-GET {{gateway_host}}/api/settings
-x-ms-client-principal: {{client_principal}}
 
 ###
 
