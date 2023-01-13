@@ -10,7 +10,7 @@ audience: students, devs
 level: intermediate
 tags: node.js, containers, docker, azure, static web apps, javascript, typescript, microservices
 published: false
-wt_id: 0000-javascript-yolasors
+wt_id: javascript-0000-yolasors
 sections_title:
   - Welcome
 ---
@@ -38,10 +38,11 @@ We will build a complete application including a website with authentication and
 ## Prerequisites
 
 | | |
-|----------------|------------------------------------------------------|
-| GitHub account | [Get a free GitHub account](https://github.com/join) |
-| Azure account  | [Get a free Azure account](https://azure.microsoft.com/free) |
-| A web browser  | [Get Microsoft Edge](https://www.microsoft.com/edge) |
+|----------------------|------------------------------------------------------|
+| GitHub account       | [Get a free GitHub account](https://github.com/join) |
+| Azure account        | [Get a free Azure account](https://azure.microsoft.com/free) |
+| A web browser        | [Get Microsoft Edge](https://www.microsoft.com/edge) |
+| JavaScript knowledge | [JavaScript tutorial on MDN documentation](https://developer.mozilla.org/docs/Web/JavaScript)<br>[JavaScript for Beginners on YouTube](https://www.youtube.com/playlist?list=PLlrxD0HtieHhW0NCG7M536uHGOtJ95Ut2) |
 
 We'll use [GitHub Codespaces](https://github.com/features/codespaces) to have an instant dev environment already prepared for this workshop.
 
@@ -143,7 +144,7 @@ After that you need to clone the project on your machine:
 git clone <your_repo_url>
 ```
 
-3. Open the project in VS Code, open the **command palette** with `Ctrl+Shift+P` (`Command+Shift+P` on Mac) and enter **Reopen in Container**.
+3. Open the project in VS Code, open the **command palette** with `Ctrl+Shift+P` (`Command+Shift+P` on macOS) and enter **Reopen in Container**.
 
 ![Screenshot of VS Code showing the "reopen in container" command](./assets/vscode-reopen-in-container.png)
 
@@ -191,7 +192,7 @@ jq --version
 
 The project template you forked is a monorepo, a single repository containing multiple projects. It's organized as follows (for the most important files):
 
-```
+```sh
 .azure/           # Azure infrastructure templates and scripts
 .devcontainer/    # Dev container configuration
 packages/         # The different services of our app
@@ -223,13 +224,13 @@ The only changes we made to the generated code is to remove the files we don't n
 
 ---
 
-## Settings API
-
-<div class="tip" data-title="note">
+<div class="warning" data-title="skip notice">
 
 > If you want to skip the Settings API implementation and jump directly to the next section, run this command to get the completed code directly: `TODO`
 
 </div>
+
+## Settings API
 
 We'll start by creating the Settings API, which will be responsible for storing the settings of each user. 
 
@@ -272,7 +273,7 @@ export default fp(async function (fastify, opts) {
 
 Plugins in Fastify are just functions that receive the Fastify instance and the options passed to the plugin. All plugins within the `plugins/` folder will be automatically loaded by Fastify when the server starts.
 
-Using the `decorate` method, we can add properties to the Fastify instance, which will be available in all the routes of our API. We use it here to provide a `db` property that will be an instance of our database service.
+Using the `decorate` method, we can add properties to the Fastify instance, which will be available in all the routes of our API. It's a form of [dependency injection](https://en.wikipedia.org/wiki/Dependency_injection). We use it here to provide a `db` property that will be an instance of our database service.
 
 Now we'll implement the `MockDatabase` class. Add this code at the bottom of the file:
 
@@ -300,7 +301,7 @@ class MockDatabase {
 
 <div class="tip" data-title="tip">
 
-> We are using the **async/await** keywords that enable asynchronous, promise-based behavior to be written like regular synchronous code. You can read more about it in the [MDN documentation](https://developer.mozilla.org/docs/Learn/JavaScript/Asynchronous/Promises#async_and_await).
+> We are using the **async/await** keywords to allow asynchronous, promise-based behavior to be written like regular synchronous code. You can read more about it in the [MDN documentation](https://developer.mozilla.org/docs/Learn/JavaScript/Asynchronous/Promises#async_and_await).
 
 </div>
 
@@ -308,7 +309,7 @@ As you can see, we are using a simple object to store the settings of each user.
 
 <div class="tip" data-title="tip">
 
-> Did you noticed the `#` at the beginning of the `#delay()` method? This new feature of JavaScript means that this method is private, and only class members are allowed to call it. You can read more about it in the [MDN documentation](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Classes/Private_class_fields).
+> Did you noticed the `#` before the `#delay()` method? This new feature of JavaScript means that this method is private, and only class members are allowed to call it. You can read more about it in the [MDN documentation](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Classes/Private_class_fields).
 
 </div>
 
@@ -316,20 +317,230 @@ As you can see, we are using a simple object to store the settings of each user.
 
 Now that we have our database plugin, we can create the routes for our API.
 
-- PUT /settings/{user_id} { dice_faces: 6 }
-- GET /settings/{user_id}
+Create a new file `packages/settings-api/routes/settings.js` with the following content:
+
+```js
+export default async function (fastify, opts) {
+
+}
+```
+
+<div class="tip" data-title="tip">
+
+> In the VS Code editor, you directly add folders when creating a new file by adding them in the path when asked for the file name.
+> ![Create a new file with intermediate folders in VS Code](./assets/vscode-create-folder.png)
+
+</div>
+
+Just like plugins, routes are also functions that receive the Fastify instance and the options passed to the plugin. All routes within the `routes/` folder will be automatically loaded by Fastify when the server starts, and **folder names will be used as prefixes for the routes** by convention.
+
+#### Adding the PUT route
+
+We'll start by adding the `PUT /settings/{user_id}` route. Add this code inside the function we just created:
+
+```js
+  fastify.put('/:userId', async function (request, reply) {
+    request.log.info(`Saving settings for user ${request.params.userId}`);
+    await fastify.db.saveSettings(request.params.userId, request.body);
+    reply.code(204);
+  });
+```
+
+<div class="tip" data-title="tip">
+
+> We use the HTTP verb `PUT` to create or update a resource. In this case, we are creating or updating the settings of a user. This is the common way to implement the "create or update" operation in REST APIs.
+
+</div>
+
+We want to retrieve the `userId` from the URL, so we use the `:userId` syntax in the route definition to define a parameter. We can then access it using `request.params.userId`.
+
+Notice that we do not need to import anything to use the logger and the database, as they provided respectively by the `request` and `fastify` objects.
+
+Finally, we are using the `reply` object to return the HTTP status `204` (meaning "No Content") response, which is a standard way to return an empty response when we create or update a resource in REST APIs.
+
+#### Adding data validation
+
+Wait a minute, what about the request body data? Do we really want to save just *any* data received in our database? Definitely not!
+
+We should validate the data before saving it, and return an error if the data is invalid. Fastify provides a very powerful and convenient validation system that we can use to validate the request body, based on [JSON Schema](https://json-schema.org/).
+
+We can specify the JSON Schema for the request body the optional route options object. Add this code just before the route definition:
+
+```js
+  const putOptions = {
+    schema: {
+      body: {
+        type: 'object',
+        properties: {
+          sides: { type: 'number' }
+        }
+      }
+    }
+  }
+```
+
+Then add the `putOptions` object as the second parameter of the `fastify.put()` method:
+
+```js
+  fastify.put('/:userId', putOptions, async function (request, reply) {
+    // ...
+  });
+```
+
+Now fastify will take care of validating the request body, and return an error if the data is invalid.
+
+#### Adding the GET route
+
+Now let's add another route to retrieve the settings of a user. Add this code below the `PUT` route definition:
+
+```js
+  fastify.get('/:userId', async function (request, reply) {
+    const settings = await fastify.db.getSettings(request.params.userId);
+    if (settings) {
+      return settings;
+    }
+    return { sides: 6 };
+  });
+```
+
+This time we are using the `GET` HTTP verb, and we are returning the settings of the user if they exist, or a default value if they don't.
+
+Notice that we are returning the settings directly, without using the `reply` object. This is because Fastify will automatically convert the returned object to a JSON response, with the correct `Content-Type` header and a status code `200` by default.
 
 ### Testing our API
 
-- test with REST client/curl
+It's now time to test our API! First we need to start the server. Run the following command in the terminal:
+
+```bash
+npm start --workspace=settings-api
+```
+
+Notice that the logs are displayed in JSON format. 
+
+![Screenshot showing JSON logs in the terminal](./assets/fastify-json-logs.png)
+
+This is because we are using the `pino` logger, the default logger for Fastify. JSON logs are great for machine processing, but not so much for humans. When debugging our apps we can pipe the output to the [`pino-pretty`](https://github.com/pinojs/pino-pretty) tool to format the logs in a more readable way:
+
+```bash
+npm start --workspace=settings-api | pino-pretty
+```
+
+![Screenshot showing pretty logs in the terminal](./assets/fastify-pretty-logs.png)
+
+Now it's much better! 🙂
+
+We'll  use the [REST client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) extension for Visual Studio Code to send requests to our API. This extension allows us to write HTTP requests in a regular text file, and send them with a single click. It's very convenient for testing APIs, as it can be committed to the repository and shared with the team.
+
+Open the file `api.http` file and have a look at the content. We defined a few variables at the top of the file using the `@variable_name = <value>` syntax, then the requests for the APIs below. The request syntax is straightforward, and conforms to the HTTP standard:
+
+```http
+[<METHOD>] <URL> [<HTTP_VERSION>]
+[<HEADERS>]
+
+[<BODY>]
+```
+
+All sections between square brackets are optional. Alternatively, the `curl` syntax is also supported if you prefer it.
+You can separate different requests in a file using `###`.
+
+Now click on the **Send Request** text below the `# Get user settings` comment:
+
+![Screenshot showing how to send a request in the .http file](./assets/fastify-send-request.png)
+
+You should see the following response in the **Response** tab, returung the default settings value:
+
+![Screenshot showing the GET response](./assets/fastify-get-response.png)
+
+<div class="tip" data-title="tip">
+
+> Using the REST client extension is not mandatory, you can use any other tool you want to send requests to your API. For example, you can use [curl](https://curl.se/) or [Postman](https://www.postman.com/).
+
+</div>
+
+Then click on the **Send Request** text below the `# Update user settings` comment, and check that you receive a `204` status code in the response.
+
+Finally, try the `# Get user settings` request again, and you should observe the updated settings.
+
+If everything works as expected, you can now stop the server by pressing `Ctrl+C` in the terminal.
 
 ### Creating the Dockerfile
 
-+ .dockerignore
+Our settings API is now ready for containerization! Containers are a great way to package and deploy applications, as they allow us to isolate the application from the host environment, and to run it in any environment, from a developer's laptop to a cloud provider.
+
+Let's create a file `Dockerfile` under the `packages/settings-api` folder to build a Docker image for our API:
+
+```dockerfile
+# syntax=docker/dockerfile:1
+FROM node:18-alpine
+ENV NODE_ENV=production
+
+WORKDIR /app
+COPY ./package*.json ./
+COPY ./packages/settings-api ./packages/settings-api
+RUN npm ci --omit=dev --workspace=settings-api --cache /tmp/empty-cache
+EXPOSE 4001
+CMD [ "npm", "start", "--workspace=settings-api" ]
+```
+
+The first statement `FROM node:18-alpine` means that we use the [`node` image](https://hub.docker.com/_/node) as a base, with Node.js 18 installed. The `alpine` variant is a lightweight version of the image, meaning that it will result in a smaller container size, which is great for production environments.
+
+The second statement `ENV NODE_ENV=production` sets the `NODE_ENV` environment variable to `production`. This is a convention in the Node.js ecosystem to indicate that the app is running in production mode. It enables production optimizations in most frameworks.
+
+After that, we are specifying our work directory with `WORKDIR /app`. We then need to copy our project files to the container. Because we are using NPM workspaces, it's not enough to copy the `./packages/settings-api` folder, we also need to copy the root `package.json` file and more importantly the `package-lock.json` file, to make sure that the dependencies are installed in the same version as in our local environment.
+
+Then we run the `npm ci` command a few additional parameters, to install the project dependencies:
+- `--omit=dev` tells NPM to only install the production dependencies
+- `--workspace=settings-api` tells NPM to install the dependencies only for the `settings-api` project
+- `--cache /tmp/empty-cache` tells NPM to use an empty cache folder, to avoid save the cached packages download in the container. This is not strictly necessary, but it's a good practice to avoid making our container bigger than necessary.
+
+Next the `EXPOSE 4001` instruction tells Docker than our container lister on the network port `4001` at runtime.
+
+Finally, we use the `CMD` instruction to specify the command that will be executed when the container starts. In our case, we want to run the `npm start` command of the `settings-api` project.
+
+We also need to create a `.dockerignore` file to tell Docker which files to ignore when copying files to the image:
+
+```text
+node_modules
+*.log
+```
+
+`.dockerignore` files work the same way as `.gitignore` files. We are ignoring the `node_modules` folder as we'll run `npm ci` ourselves to only install the dependencies we need.
 
 ### Testing our Docker image
 
-- test with REST client/curl
+You can now build our Docker image and run it locally to test it. First, let's build the image by running the following command in the terminal:
+
+```bash
+docker build --tag settings-api --file ./Dockerfile ../..
+```
+
+We tag the image with the name `settings-api`, and because we are in a NPM workspace, we need to specify the build context to our repository root with `../..`.
+
+After the build is complete, you can run the image with the following command:
+
+```bash
+docker run --rm --publish 4001:4001 settings-api
+```
+
+The `--rm` flag tells Docker to delete the container after it stops. The `--publish 4001:4001` flag tells Docker to forward the network traffic from the host port `4001` to the container port `4001`, so we can access the API.
+
+You can now test the API again using the `api.http` file just like before, to check that everything works as expected.
+
+Because we might need to run these commands often, we can add them to the scripts section of the `package.json` file:
+
+```json
+{
+  "scripts": {
+    "test": "tap \"test/**/*.test.js\"",
+    "start": "fastify start -l info app.js -a 0.0.0.0 -p 4001",
+    "dev": "fastify start -w -l info -P app.js -p 4001",
+    "docker:build": "docker build --tag settings-api --file ./Dockerfile ../..",
+    "docker:run": "docker run --rm --publish 4001:4001 settings-api"
+  },
+}
+```
+
+This way we can use the `npm run docker:build` and `npm run docker:run` commands to build and run the image.
 
 ---
 
