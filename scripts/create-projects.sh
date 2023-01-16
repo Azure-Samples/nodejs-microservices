@@ -30,7 +30,7 @@ perl -i -pe "s/fastify start -w -l info -P app.js/fastify start -w -l info -P ap
 ##############################################################################
 
 echo "Creating dice-api project..."
-npx -y @nestjs/cli@9.1.8 new dice-api --package-manager npm --skip-git --skip-install
+npx -y @nestjs/cli@9.1.8 new dice-api --package-manager npm --skip-install
 perl -i -pe 's/platform-express":.*?,/$&\n    "nestjs-pino": "^3.1.1",/' dice-api/package.json
 
 echo -e "import { NestFactory } from '@nestjs/core';

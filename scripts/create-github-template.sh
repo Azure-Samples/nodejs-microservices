@@ -18,12 +18,14 @@ mkdir -p $TEMPLATE_HOME
 find . -type d -not -path '*node_modules*' -not -path '*.git/*' -not -path './packages*' -exec mkdir -p '{}' "$TEMPLATE_HOME/{}" ';'
 find . -type f -not -path '*node_modules*' -not -path '*.git/*' -not -path './packages*' -exec cp -r '{}' "$TEMPLATE_HOME/{}" ';'
 cd $TEMPLATE_HOME
+rm -rf .git
+git init
 
 # Create projects
 ./scripts/create-projects.sh
 
+# Remove unnecessary files
 rm -rf node_modules
-rm -rf .git
 rm -rf .github
 rm -rf TODO
 rm -rf docker-compose.yml
@@ -63,7 +65,6 @@ if [[ ${1-} == "--local" ]]; then
   open $TEMPLATE_HOME
 else
   # Update git repo
-  git init
   git remote add origin $TEMPLATE_REPO
   git add .
   git commit -m "chore: initial commit"
