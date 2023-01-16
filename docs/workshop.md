@@ -595,7 +595,7 @@ This time we'll use the [NestJS](https://nestjs.com/) framework to create our AP
 
 Under the hood, it's based on Express, but can also be configured to use Fastify for better performance. It also provides a CLI tool to generate new modules, controllers, services, etc, and to build and test the application easily.
 
-### Create the database service
+### Creating the database service
 
 Just like we did with the Settings API, we'll start by creating a database service to store the results of the rolls. For now we'll use an in-memory mock database, but we'll later connect a proper database to persist the data.
 
@@ -632,7 +632,7 @@ We need to store 3 things for each roll:
 
 We'll use the timestamp to sort the results by date for the history endpoint.
 
-Then, let's complete the `DbService` class to implement the mock database:
+Let's complete the `DbService` class to implement the mock database:
 
 ```typescript
 @Injectable()
@@ -664,21 +664,234 @@ When getting the last rolls, we'll filter the array to only keep the rolls with 
 
 Finally, we'll add a small delay to simulate the time it takes to access the database, just like we did in the Settings API.
 
-### Creating the routes
+### Adding the POST route
 
+The next step is to create the routes for the API. We'll start by creating the controller for the `/rolls` route. Run the following command to create a new controller called `rolls`:
 
+```bash
+npx nest generate controller rolls --flat
+```
 
-- POST /rolls { dice_faces: } => { result: 4 } + store in DB (w/ date + faces)
-- GET  /rolls/history?count=50&dice_faces=6 => { result: [2, 4, 6] }
-- test with REST client/curl
-- Dockerfile with Docker build
-- test
+Just like with the database, it created a new file called `rolls.controller.ts` in the `src` folder, along with its unit test file, and configured `app.module.ts` to register the new controller.
+
+Now we'll complete the `rolls.controller.ts` file to implement the routes. First we need to add a few imports and configure the logger:
+
+```typescript
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Logger,
+  ParseIntPipe,
+  DefaultValuePipe,
+} from '@nestjs/common';
+import { DbService } from './db.service';
+
+@Controller('rolls')
+export class RollsController {
+  private readonly logger = new Logger(DbService.name);
+
+  constructor(private readonly db: DbService) {}
+}
+```
+
+We instanciate the logger with the name of the class, that's automatically set by NestJS thanks to the `@Controller()` decorator. We also inject the `DbService` service using the constructor: NestJS will automatically create an instance of the service and inject it in the controller using its type as a key.
+
+Add the following code to the class to implement the `POST /rolls` route:
+
+```typescript
+  @Post()
+  async rollDice(@Body('sides') sides: number) {
+    this.logger.log(`Rolling dice [sides: ${sides}]}`);
+    const result = Math.ceil(Math.random() * sides);
+    await this.db.addRoll({
+      sides: sides,
+      timestamp: Date.now(),
+      result,
+    });
+    return { result };
+  }
+```
+
+NestJS makes use of decorators to configure the routes. The `@Post()` decorator indicates that this method will handle the `POST` method, and the `/rolls` route is specified in the `@Controller()` decorator. The `@Body('sides')` decorator tells NestJS to get the body of the request, find the `sides` property and pass it to the method as a parameter.
+
+We then generate a random number between 1 and the number of sides of the dice, and store the result in the database. Finally, we return the result of the roll, and just like Fastify, NestJS will automatically convert the object to JSON and set the correct content type.
+
+<div class="tip" data-title="tip">
+
+> The `{ result }` syntax is a shorthand for `{ result: result }`, and is allowed in JavaScript since ES6.
+
+</div>
+
+### Adding data validation
+
+We added the type `number` to specify the type of the expected property `sides` in the request body, but that's not enough to validate the data: we need to make sure that the property is defined and that its value is an integer.
+
+For that we can use the built-in NestJS [Pipes](https://docs.nestjs.com/pipes). A pipe is a class that implements the `PipeTransform` interface, and has a `transform()` method that takes the value to transform as a parameter, and returns the transformed value. We can use pipes to transform the data, or to validate it.
+
+Let's modify our method to use a pipe to validate the data:
+
+```typescript
+  @Post()
+  async rollDice(@Body('sides', ParseIntPipe) sides: number) {
+    // ...
+  }
+```
+
+Here we added the `ParseIntPipe` to make sure that our `sides` parameter is an integer. If the value is not an integer (or not defined), NestJS will throw an error, and the request will fail with a 400 status code.
+
+<div class="tip" data-title="tip">
+
+> Built-in pipes provides parsing and validation for basic types, but for more complex scenarios you can use the `ValidationPipe` and define **Data Transfer Objects (DTO)**. You'll need to install use the [class-validator](https://github.com/typestack/class-validator) package for that. Read more about it in the [NestJS documentation](https://docs.nestjs.com/techniques/validation).
+
+</div>
+
+### Adding the GET route
+
+We'll now add a second route to our controller, so we can retrieve the last rolls. Add the following code to the controller:
+
+```typescript
+  @Get('history')
+  async getHistory(
+    @Query('max', new DefaultValuePipe(10), ParseIntPipe) max: number,
+    @Query('sides', new DefaultValuePipe(6), ParseIntPipe) sides: number
+  ) {
+    this.logger.log(`Retrieving last ${max} rolls history [sides: ${sides}]`);
+    const rolls = await this.db.getLastRolls(max, sides);
+    return { result: rolls.map((roll) => roll.result) };
+  }
+```
+
+By adding the `'history'` route inside the `@Get()` decorator, we're making the route of this API `GET /rolls/history` as we defined `'rolls'` to be the route prefix for our controller. Just like we did using previously using the `@Body()` decorator, we can use the `@Query()` decorator to get the query parameters of the request and validate then. Since we want them to be optional this time, we added the `DefaultValuePipe` to set a default value if the parameter is not defined.
+
+Finally, we retrieve the last rolls from the database, and return the result as an array of integers. We use the `map()` method to extract the `result` property from each roll.
+
+### Testing our API
+
+We finished implementing our API, so let's test it using the same method we used for the Settings API.
+
+Start the server using `npm start | pino-pretty` and open the file `api.http` file. Go to the "Dice API" section and hit **Send Request** on the `POST /rolls` request. Check that the response is correct, and send a few requests to verify that the result is a random number between 1 and 6.
+
+Then, hit **Send Request** on the `GET /rolls/history` request. Check that the response is an array containing the last results you got from the previous calls. You can also try to change the `max` and `sides` query parameters to see how the results change.
+
+If everything works as expected, you can stop the server by pressing `Ctrl+C` in the terminal.
+
+### Creating the Dockerfile
+
+It's time to create the Dockerfile for our Dice API. Unlike the Settings API, our Dice API have a **build** step to compile the TypeScript code to JavaScript.
+
+We'll use the [multi-stage build](https://docs.docker.com/develop/develop-images/multistage-build/) feature of Docker to build our API and create a smaller container image, while keeping our Dockerfile readable and maintainable.
+
+ Create a new file named `Dockerfile` in the `dice-api` folder, with the following content:
+
+```dockerfile
+# syntax=docker/dockerfile:1
+
+# Build Node.js app
+# ------------------------------------
+FROM node:18-alpine as build
+WORKDIR /app
+COPY ./package*.json ./
+COPY ./packages/dice-api ./packages/dice-api
+RUN npm ci --workspace=dice-api --cache /tmp/empty-cache
+RUN npm run build --workspace=dice-api
+```
+
+For this first stage, we use amost the same setup as before. The first difference is that we define a name for this stage, using the `as` keyword. We'll use this name later to copy the compiled code from this stage to the next one.
+
+The second difference is that instead of running the `start` script using the `CMD` instruction, we run the `build` script. This will compile the TypeScript code to JavaScript, and put the compiled code in the `dist` folder.
+
+Now we can create the second stage of our Dockerfile, that will be used to create the final Docker image. Add the following code after the first stage:
+
+```dockerfile
+# Run Node.js app
+# ------------------------------------
+FROM node:18-alpine
+ENV NODE_ENV=production
+
+WORKDIR /app
+COPY ./package*.json ./
+COPY ./packages/dice-api/package.json ./packages/dice-api/
+RUN npm ci --omit=dev --workspace=dice-api --cache /tmp/empty-cache
+COPY --from=build app/packages/dice-api/dist packages/dice-api/dist
+EXPOSE 4002
+CMD [ "node", "packages/dice-api/dist/main" ]
+```
+
+This stage is very similar to the first one, with few differences:
+- We're not copying the whole `packages/dice-api` folder this time, but only the `package.json` file. We need this file to install the dependencies, but we don't need to copy the source code.
+- We're using the `--omit=dev` option of the `npm ci` command to only install the production dependencies, as we don't need the development dependencies in our final Docker image.
+- We're copying the compiled code from the first stage using the `--from=build` option of the `COPY` instruction. This will copy the compiled code from the `build` stage to our final Docker image.
+
+Finally we tell Docker to expose port 4002, and run compiled `main.js` file when the container starts just like we did for the Settings API.
+
+With this setup, Docker will first create a container to build our app, and then create a second container where we copy the compiled app code from the first container to create the final Docker image.
+
+As previously, you also need to create a `.dockerignore` file to tell Docker which files to ignore when copying files to the image:
+
+```text
+node_modules
+*.log
+```
+
+### Testing our Docker image
+
+You can now build the Docker image and run it locally to test it. First, let's 
+add the commands to build and run the Docker image to our `package.json` file:
+
+```json
+{
+  "scripts": {
+    // ...
+    "docker:build": "docker build --tag dice-api --file ./Dockerfile ../..",
+    "docker:run": "docker run --rm --publish 4002:4002 dice-api"
+  },
+}
+```
+
+Now we can build the image by running this command from the `dice-api` folder:
+
+```bash
+npm run docker:build
+```
+
+After the build is complete, you can run the image with the following command:
+
+```bash
+npm run docker:run | pino-pretty
+```
+
+You can now test the API again using the `api.http` file just like before, to check that everything works as expected.
+
+After you checked that everything works as expected, commit the changes to the repository to keep track of your progress.
 
 ---
 
 ## Gateway API
 
-- express
+Our third service is the Gateway API. This API will make use of the two services we built previously to provide a public backend for our client website.
+
+The Gateway API goal is to provide data endpoints tailored for the website, and will require user authentication. Because of that, the routes will a bit be different from the ones we used in the previous services:
+- `GET /settings`: returns the current settings for the authenticated user.
+- `PUT /settings`: updates the settings for the authenticated user.
+- `POST /rolls`: rolls N dices using the settings for the authenticated user, and returns the results. The number of dices to roll is specified in the request body with the format `{ "count": 100 }`.
+- `GET /rolls/history?max=<max_results>`: returns at most the last `<max_results>` rolls for the authenticated user, using its saved settings.
+
+### Introducing Express
+
+Does [Express](https://expressjs.com) really need an introduction? It's one of the most popular Node.js web frameworks, used by many applications in production. It's minimalistic, flexible, and benefits from a large ecosystem of plugins and a huge active developer community.
+
+While it doesn't provide a lot of features out of the box compared to more modern frameworks like [NestJS](https://nestjs.com) or [Fastify](https://www.fastify.io), it's still a great choice for building services especially if your want something unopinionated that you can easily customize to your needs.
+
+### Creating the authentication middleware
+
+
+
+
+
+
 - need auth header with user_id (from SWA) => middleware
 - PUT /settings/
 - GET /settings/
@@ -688,8 +901,18 @@ Finally, we'll add a small delay to simulate the time it takes to access the dat
   => { result: [2, 4, 6] }
 - test with REST client/curl
 - Dockerfile
+
+### Creating the proxy service
+### Adding the routes
+### Testing our API
+### Creating the Dockerfile
+### Testing our Docker image
+
+---
+
+## Using Docker compose
 - Docker compose to run all yml
-- test
+
 
 ---
 
