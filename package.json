@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "start": "concurrently npm:start:* --kill-others",
-    "start:services": "docker-compose up",
+    "start:services": "docker compose up",
     "start:website": "npm run start --workspace=website",
     "build:website": "npm run build --workspace=website",
     "docker:build": "npm run docker:build --if-present --workspaces "
