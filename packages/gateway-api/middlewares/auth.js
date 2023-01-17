@@ -1,12 +1,13 @@
 // Retrieve user from Static Web Apps authentication header
 function getUser(req) {
   try {
+    const header = req.headers['x-ms-client-principal'];
     const principal = Buffer
-      .from(req.headers['x-ms-client-principal'], 'base64')
+      .from(header, 'base64')
       .toString('ascii');
 
     if (principal) {
-      return JSON.parse(principal)?.userDetails;
+      return JSON.parse(principal)?.userId;
     }
   } catch (error) {
     req.log.error('Cannot get user', error);
@@ -18,7 +19,7 @@ function getUser(req) {
 function auth(req, res, next) {
   req.user = getUser(req);
   if (!req.user) {
-    return res.status(401).send('Unauthorized');
+    return res.sendStatus(401);
   }
   next();
 }
