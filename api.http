@@ -8,9 +8,9 @@
 @gateway_host = http://localhost:4003
 @user_id = test123
 
-# Base64 of { "userDetails": "test123" }
+# Base64 of { "userId": "test123" }
 # You can use https://www.base64encode.org/ to generate your own
-@client_principal = eyAidXNlckRldGFpbHMiOiAidGVzdDEyMyIgfQ==
+@client_principal = eyAidXNlcklkIjogInRlc3QxMjMiIH0=
 
 ##################################################################
 # Settings API
@@ -61,7 +61,7 @@ x-ms-client-principal: {{client_principal}}
 
 ###
 
-# Roll dice
+# Roll dices
 POST {{gateway_host}}/api/rolls
 content-type: application/json
 x-ms-client-principal: {{client_principal}}
