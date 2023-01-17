@@ -23,7 +23,8 @@ router.get('/settings', async function(req, res) {
 });
 
 router.post('/rolls', async function(req, res) {
-  if (!req.body.count || isNaN(Number(req.body.count))) {
+  const count = Number(req.body?.count);
+  if (isNaN(count) || count < 1) {
     return res.status(400).send('Invalid count parameter');
   }
   try {
@@ -36,7 +37,7 @@ router.post('/rolls', async function(req, res) {
 
 router.get('/rolls/history', async function(req, res) {
   try {
-    const result = await rollsService.getHistory(req.user, req.query.max);
+    const result = await rollsService.getRollsHistory(req.user, req.query.max);
     res.json(result);
   } catch (error) {
     res.status(502).send(error.message);
