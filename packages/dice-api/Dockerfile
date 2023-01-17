@@ -20,4 +20,4 @@ COPY ./packages/dice-api/package.json ./packages/dice-api/
 RUN npm ci --omit=dev --workspace=dice-api --cache /tmp/empty-cache
 COPY --from=build app/packages/dice-api/dist packages/dice-api/dist
 EXPOSE 4002
-CMD [ "node", "packages/dice-api/dist/main" ]
+CMD [ "npm", "run", "start:prod", "--workspace=dice-api" ]
