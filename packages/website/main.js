@@ -1,14 +1,14 @@
-const API_URL = '/api';
+const apiUrl = '/api';
 const sidesInput = document.getElementById('sides');
 const countInput = document.getElementById('count');
 const maxInput = document.getElementById('max');
 const resultDiv = document.getElementById('result');
 
 async function getUserSettings() {
-  const response = await fetch(`${API_URL}/settings`);
+  const response = await fetch(`${apiUrl}/settings`);
   if (response.ok) {
-    const settings = await response.json();
-    sidesInput.value = settings.sides ?? 6;
+    const { sides } = await response.json();
+    sidesInput.value = sides;
   } else {
     resultDiv.innerHTML = 'Cannot load user settings';
   }
@@ -16,7 +16,7 @@ async function getUserSettings() {
 
 async function saveUserSettings() {
   const sides = sidesInput.value;
-  const response = await fetch(`${API_URL}/settings`, {
+  const response = await fetch(`${apiUrl}/settings`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ sides }),
@@ -30,7 +30,7 @@ async function saveUserSettings() {
 
 async function rollDices() {
   const count = countInput.value;
-  const response = await fetch(`${API_URL}/rolls`, {
+  const response = await fetch(`${apiUrl}/rolls`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ count }),
@@ -45,7 +45,7 @@ async function rollDices() {
 
 async function getRollHistory() {
   const max = maxInput.value;
-  const response = await fetch(`${API_URL}/rolls/history?max=${max}`);
+  const response = await fetch(`${apiUrl}/rolls/history?max=${max}`);
   if (response.ok) {
     const json = await response.json();
     resultDiv.innerHTML = json.result.join(', ');
