@@ -29,7 +29,7 @@ export class RollsController {
   }
 
   @Get('history')
-  async getHistory(
+  async getRollsHistory(
     @Query('max', new DefaultValuePipe(10), ParseIntPipe) max: number,
     @Query('sides', new DefaultValuePipe(6), ParseIntPipe) sides: number
   ) {
