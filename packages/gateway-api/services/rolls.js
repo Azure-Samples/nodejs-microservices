@@ -2,10 +2,9 @@ const config = require('../config');
 const { getUserSettings } = require('./settings');
 
 async function rollDices(userId, count) {
-  const settings = await getUserSettings(userId);
-  const sides = settings.sides ?? 6;
-  const requests = [];
-  const makeRequest = async () => {
+  const { sides } = await getUserSettings(userId);
+  const promises = [];
+  const rollDice = async () => {
     const response = await fetch(`${config.diceApiUrl}/rolls`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -19,16 +18,15 @@ async function rollDices(userId, count) {
   }
 
   for (let i = 0; i < count; i++) {
-    requests.push(makeRequest());
+    promises.push(rollDice());
   }
 
-  return { result: await Promise.all(requests) };
+  return { result: await Promise.all(promises) };
 }
 
-async function getHistory(userId, max) {
+async function getRollsHistory(userId, max) {
   max = max ?? '';
-  const settings = await getUserSettings(userId);
-  const sides = settings.sides ?? '';
+  const { sides } = await getUserSettings(userId);
   const response = await fetch(`${config.diceApiUrl}/rolls/history?max=${max}&sides=${sides}`);
   if (!response.ok) {
     throw new Error(`Cannot get roll history for user ${userId}: ${response.statusText}`);
@@ -38,5 +36,5 @@ async function getHistory(userId, max) {
 
 module.exports = {
   rollDices,
-  getHistory,
+  getRollsHistory,
 };
