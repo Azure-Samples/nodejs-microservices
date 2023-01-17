@@ -754,7 +754,7 @@ We'll now add a second route to our controller, so we can retrieve the last roll
 
 ```typescript
   @Get('history')
-  async getHistory(
+  async getRollsHistory(
     @Query('max', new DefaultValuePipe(10), ParseIntPipe) max: number,
     @Query('sides', new DefaultValuePipe(6), ParseIntPipe) sides: number
   ) {
@@ -817,7 +817,7 @@ COPY ./packages/dice-api/package.json ./packages/dice-api/
 RUN npm ci --omit=dev --workspace=dice-api --cache /tmp/empty-cache
 COPY --from=build app/packages/dice-api/dist packages/dice-api/dist
 EXPOSE 4002
-CMD [ "node", "packages/dice-api/dist/main" ]
+CMD [ "npm", "run", "start:prod", "--workspace=dice-api" ]
 ```
 
 This stage is very similar to the first one, with few differences:
@@ -825,7 +825,7 @@ This stage is very similar to the first one, with few differences:
 - We're using the `--omit=dev` option of the `npm ci` command to only install the production dependencies, as we don't need the development dependencies in our final Docker image.
 - We're copying the compiled code from the first stage using the `--from=build` option of the `COPY` instruction. This will copy the compiled code from the `build` stage to our final Docker image.
 
-Finally we tell Docker to expose port 4002, and run compiled `main.js` file when the container starts just like we did for the Settings API.
+Finally we tell Docker to expose port 4002, and run the `start:prod` NPM script when the container starts.
 
 With this setup, Docker will first create a container to build our app, and then create a second container where we copy the compiled app code from the first container to create the final Docker image.
 
@@ -869,6 +869,12 @@ After you checked that everything works as expected, commit the changes to the r
 
 ---
 
+<div class="info" data-title="skip notice">
+
+> If you want to skip the Gateway API implementation and jump directly to the next section, run this command in the terminal to get the completed code directly: `TODO`
+
+</div>
+
 ## Gateway API
 
 Our third service is the Gateway API. This API will make use of the two services we built previously to provide a public backend for our client website.
@@ -887,59 +893,771 @@ While it doesn't provide a lot of features out of the box compared to more moder
 
 ### Creating the authentication middleware
 
+Because our Gateway API will require authentication, we need to create a middleware that will check if the user is authenticated and provide the user ID to the settings service.
 
+User identity and authentication will be provided by [Azure Static Web Apps (SWA) authentication](https://learn.microsoft.com/azure/static-web-apps/user-information?tabs=javascript#api-functions). This feature is enabled by default on all SWA apps, and provides a simple way to authenticate users using various providers like GitHub, Twitter, or Microsoft.
 
+Create a new file `packages/gateway-api/middlewares/auth.js` (you also need to create the middlewares folder), and add the following code:
 
+```js
+// Retrieve user from Static Web Apps authentication header
+function getUser(req) {
+  try {
+    const header = req.headers['x-ms-client-principal'];
+    const principal = Buffer
+      .from(header, 'base64')
+      .toString('ascii');
 
+    if (principal) {
+      return JSON.parse(principal)?.userDetails;
+    }
+  } catch (error) {
+    req.log.error('Cannot get user', error);
+  }
+  return undefined;
+}
+```
 
-- need auth header with user_id (from SWA) => middleware
-- PUT /settings/
-- GET /settings/
-- POST /rolls { count: 100 } => get settings + N calls to Dice API
-  => { result: 4, duration: XX (in ms) }
-- GET  /rolls/history?count=50 => get settings + call to Dice API
-  => { result: [2, 4, 6] }
-- test with REST client/curl
-- Dockerfile
+This helper function allows to retrieve the user information from the `x-ms-client-principal` header provided by SWA. This header is a base64 encoded JSON string containing the user information, so we need to decode it and parse it to get the user object.
 
-### Creating the proxy service
+<div class="tip" data-title="tip">
+
+> The [optional chaining operator](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Optional_chaining) `?.` allows to safely access nested properties of an object without throwing an error, returning `undefined` if the property is `null` or `undefined`.
+
+</div>
+
+Now that you have a way to retrieve the user information, you can add the authentication middleware code below:
+
+```js
+// Middleware to check if user is authenticated
+function auth(req, res, next) {
+  req.user = getUser(req);
+  if (!req.user) {
+    return res.sendStatus(401);
+  }
+  next();
+}
+
+module.exports = auth;
+```
+
+An Express middleware is a function that takes three arguments: the request object, the response object, and a `next` function. The middleware can then modify the request and response objects, and optionally call the `next()` function to continue processing the request with the next middleware in the chain.
+
+Our authentication middleware is pretty straightforward: it retrieves the user information from the request, and if it's not available returns a `401 Unauthorized` response. If the user is authenticated, the user information is attached to the `user` property of the request and we continue processing the request.
+
+Next we need to tell Express to use this middleware for all routes. Open the file `packages/gateway-api/app.js` file and add this import:
+
+```js
+const auth = require('./middlewares/auth');
+```
+
+Then add the following line to the list of middlewares, just after the `app.use(cookieParser());` line:
+
+```js
+app.use(auth);
+```
+
+### Creating the settings service
+
+Now that we know the current user, we can use it to retrieve the settings for the user. To do that, we need to create a new service that will make calls to the Settings API.
+
+Create a new file `packages/gateway-api/services/settings.js` (you also need to create the `services` folder), and add the following code:
+
+```js
+const config = require('../config');
+
+async function saveUserSettings(userId, settings) {
+  const response = await fetch(`${config.settingsApiUrl}/settings/${userId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(settings),
+  });
+  if (!response.ok) {
+    throw new Error(`Cannot save settings for user ${userId}: ${response.statusText}`);
+  }
+}
+
+async function getUserSettings(userId) {
+  const response = await fetch(`${config.settingsApiUrl}/settings/${userId}`);
+  if (!response.ok) {
+    throw new Error(`Cannot get settings for user ${userId}: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+module.exports = {
+  saveUserSettings,
+  getUserSettings,
+};
+```
+
+Here we created two functions, `saveUserSettings()` and `getUserSettings()`, that makes calls to the Settings API using the [Fetch API](https://developer.mozilla.org/docs/Web/API/Fetch_API). These are methods are simple wrappers around the `fetch()` function that adds the base URL of the Settings API and handles errors.
+
+#### Adding service URLs config
+
+The Settings API URL is not hardcoded in the code, but is retrieved from the `config` object.
+
+Let's define this object in a new `packages/gateway-api/config.js` file, and add the URLs of the services we need:
+
+```js
+module.exports = {
+  settingsApiUrl: process.env.SETTINGS_API_URL || 'http://localhost:4001',
+  diceApiUrl: process.env.DICE_API_URL || 'http://localhost:4002'
+};
+```
+
+We try to read the URLs from the environment variables `SETTINGS_API_URL` and `DICE_API_URL`, and if they're not defined we fall back to default values.
+
+Using environment variables is a good practice to allow configuration of the application without having to modify the code, and it's also the preferred way to configure containerized applications.
+
+### Creating the rolls service
+
+Next we'll create a new service similar to the one we created for the Settings API, but this time for the Dice API.
+
+Create a new file `packages/gateway-api/services/rolls.js` with this code:
+
+```js
+const config = require('../config');
+const { getUserSettings } = require('./settings');
+
+async function rollDices(userId, count) {
+  const { sides } = await getUserSettings(userId);
+  const promises = [];
+  const rollDice = async () => {
+    const response = await fetch(`${config.diceApiUrl}/rolls`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sides }),
+    });
+    if (!response.ok) {
+      throw new Error(`Cannot roll dice for user ${userId}: ${response.statusText}`);
+    }
+    const json = await response.json();
+    return json.result;
+  }
+
+  for (let i = 0; i < count; i++) {
+    promises.push(rollDice());
+  }
+
+  return { result: await Promise.all(promises) };
+}
+```
+
+The `rollDices` function is a bit more complex than the one we wrote for the settings. It first retrieves the user settings to get the number of sides of the dice, and then makes multiple calls to the Dice API to roll the dice.
+
+<div class="tip" data-title="tip">
+
+> The statement `const { sides } = ...` is a [destructuring assignment](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment), it's a convenient way to extract values from objects and arrays. In this case we're extracting the `sides` property from the settings object.
+
+</div>
+
+We're making multiple calls to the Dice API and store all the request promises in the `promises` array (remember, *async functions are promises*). Then we use `Promise.all()` to wait for all the calls to complete before returning the result.
+
+Let's complete our service by adding the `getRollsHistory()` function:
+
+```js
+async function getRollsHistory(userId, max) {
+  max = max ?? '';
+  const { sides } = await getUserSettings(userId);
+  const response = await fetch(`${config.diceApiUrl}/rolls/history?max=${max}&sides=${sides}`);
+  if (!response.ok) {
+    throw new Error(`Cannot get roll history for user ${userId}: ${response.statusText}`);
+  }
+  return response.json();
+}
+```
+
+This one is more straightforward, it first retrieves the user settings then makes a call to the Dice API to get the history of rolls.
+
+Finally, we have to export our functions to complete the service:
+
+```js
+module.exports = {
+  rollDices,
+  getRollsHistory,
+};
+```
+
 ### Adding the routes
+
+Now that the heavy lifting is already done in the services, our last step is to add the routes to the Express app.
+
+Open the `packages/gateway-api/index.js` file and replace the content with this:
+
+```js
+const express = require('express');
+const router = express.Router();
+const settingsService = require('../services/settings');
+const rollsService = require('../services/rolls');
+
+router.put('/settings', async function(req, res) {
+  const settings = req.body;
+  try {
+    await settingsService.saveUserSettings(req.user, settings);
+    res.sendStatus(204);
+  } catch (error) {
+    res.status(502).send(error.message);
+  }
+});
+
+router.get('/settings', async function(req, res) {
+  try {
+    const settings = await settingsService.getUserSettings(req.user);
+    res.json(settings);
+  } catch (error) {
+    res.status(502).send(error.message);
+  }
+});
+
+router.post('/rolls', async function(req, res) {
+  const count = Number(req.body?.count);
+  if (isNaN(count) || count < 1) {
+    return res.status(400).send('Invalid count parameter');
+  }
+  try {
+    const result = await rollsService.rollDices(req.user, req.body.count);
+    res.json(result);
+  } catch (error) {
+    res.status(502).send(error.message);
+  }
+});
+
+router.get('/rolls/history', async function(req, res) {
+  try {
+    const result = await rollsService.getRollsHistory(req.user, req.query.max);
+    res.json(result);
+  } catch (error) {
+    res.status(502).send(error.message);
+  }
+});
+
+module.exports = router;
+```
+
+Every route in Express works like any other middleware, it takes a request and a response object and can do whatever it wants with them. Here we mostly just call the corresponding service function and return the result, or return an error 502 (bad gateway) if something went wrong.
+
+You can also notice that Express does not provide any built-in way to validate the request body or query parameters, we have to do it ourselves. You could also use a library like [express-validator](https://express-validator.github.io/docs/) to do that.
+
 ### Testing our API
+
+It's time to test our API! You know the drill by now, we'll start the server and send some requests to it.
+
+The only change this time is that we have to start all 3 of our services, not just the gateway API. Open 3 terminals at the root of the project by clicking on the **+** button in the terminal tab, and run the following commands in separate terminals:
+
+```bash
+# Run in first terminal
+npm start --workspace=settings-api | pino-pretty
+
+# Run in second terminal
+npm start --workspace=dice-api | pino-pretty
+
+# Run in third terminal
+npm start --workspace=gateway-api | pino-pretty
+```
+
+Open the file `api.http` file. Go to the "Gateway API" section and hit **Send Request** on the different routes to check that they work as expected.
+
+You can play a bit and increase the `count` parameter of the "Roll dices" API and observe the growth of the response time, as the number of calls to the Dice API increases.
+
+When you're done with the testing, stop all the servers by pressing `Ctrl+C` in each of the terminals.
+
 ### Creating the Dockerfile
+
+We're almost done, it's time to containerize our last API! Since our gateway API is using plain JavaScript, we do not have a build step, so the Dockerfile will almost be the same as the one we used for the Settings API.
+
+Let's create a file `Dockerfile` under the `packages/gateway-api`:
+
+```dockerfile
+# syntax=docker/dockerfile:1
+FROM node:18-alpine
+ENV NODE_ENV=production
+
+WORKDIR /app
+COPY ./package*.json ./
+COPY ./packages/gateway-api ./packages/gateway-api
+RUN npm ci --omit=dev --workspace=gateway-api --cache /tmp/empty-cache
+EXPOSE 4003
+CMD [ "npm", "start", "--workspace=gateway-api" ]
+```
+
+This Dockerfile is very similar to the one we used for the Settings API, the only differences are that we use the `gateway-api` workspace, and expose a different port.
+
+Again, you also need to create a `.dockerignore` file to tell Docker which files to ignore when copying files to the image:
+
+```text
+node_modules
+*.log
+```
+
 ### Testing our Docker image
 
+Just like you did for the other APIs, add the commands to build and run the Docker image to the `packages/gateway-api/package.json` file:
+
+```json
+{
+  "scripts": {
+    "start": "node ./bin/www",
+    "docker:build": "docker build --tag gateway-api --file ./Dockerfile ../..",
+    "docker:run": "docker run --rm --publish 4003:4003 gateway-api"
+  },
+}
+```
+
+Check that your image build correctly by running this command from the `gateway-api` folder:
+
+```bash
+npm run docker:build
+```
+
+For testing though, running all 3 services separately is a bit tedious (as you saw before), so we'll use a different approach that we'll detail in the next section.
+
 ---
+
+<div class="info" data-title="skip notice">
+
+> If you want to skip the Docker compose details and jump directly to the next section, run this command in the terminal to get the completed code directly: `TODO`
+
+</div>
 
 ## Using Docker compose
-- Docker compose to run all yml
 
+[Docker compose](https://docs.docker.com/compose/) is a tool that allows you to define and run a multi-container Docker environment. It's very useful for local development, as it allows you to run all your services with a single command.
+
+Let's create a `docker-compose.yml` file at the root of the project:
+
+```yaml
+version: "3.9"
+services:
+  settings-api:
+    build:
+      context: .
+      dockerfile: ./packages/settings-api/Dockerfile
+    ports:
+      - "4001:4001"
+
+  dice-api:
+    build:
+      context: .
+      dockerfile: ./packages/dice-api/Dockerfile
+    ports:
+      - "4002:4002"
+
+  gateway-api:
+    build:
+      context: .
+      dockerfile: ./packages/gateway-api/Dockerfile
+    ports:
+      - "4003:4003"
+    environment:
+      - DICE_API_URL=http://dice-api:4002
+      - SETTINGS_API_URL=http://settings-api:4001
+```
+
+This file defines 3 services, one for each of our APIs. We define a few things for each service:
+
+- A name, which is used to refer to the service in other parts of the file and is also used in the container name.
+- A build context, to tell Docker how to build the image.
+- The ports mapping, to expose the container port to the host.
+- The environment variables, to configure the service.
+
+For the gateway API we need to configure the `DICE_API_URL` and `SETTINGS_API_URL` environment variables, but for that we need to know the URL of the other services. When using Docker compose, we can refer to the other services simply by their name, so we can use `http://dice-api:4002` and `http://settings-api:4001` as the URLs. Docker compose will automatically handle the network configuration here to make sure that the services can communicate with each other.
+
+Now we can start all the services with a single command:
+
+```bash
+docker compose up
+```
+
+Docker will take care of building the images and starting the containers.
+
+You can open the `api.http` file and send requests to any of the APIs, to check that everything works as expected.
+
+When you're done, you can stop the services with `Ctrl+C` or by running `docker compose down`.
 
 ---
+
+<div class="info" data-title="skip notice">
+
+> If you want to skip the website implementation and jump directly to the next section, run this command in the terminal to get the completed code directly: `TODO`
+
+</div>
 
 ## Website
 
-- Vite + vanilla HTML/JS
-- Start from template!
-- Introduce SWA + CLI
-- Connect auth for github login
-- Set dice type preference (call PUT /settings)
-- Roll N dices and show results / time
-- Show last N rolls
+All our services are now ready, so we'll create a simple website interface to interact with them. We won't need it to be too fancy, so we'll use plain HTML and JavaScript.
+
+### Introducing Vite
+
+[Vite](https://vitejs.dev/) is a tool that allows you to build modern web applications with minimal configuration and a very fast feedback loop. It provides a development server that automatically rebuilds your application when you make changes, and it also bundles your application for production. Just like similar tools like Webpack or Parcel, it's not tied to a specific framework, but it makes use of [ES modules](https://developer.mozilla.org/docs/Web/JavaScript/Guide/Modules) to provide a very fast development experience.
+
+### Creating the HTML page
+
+Our website will need to display two different pages:
+- A login page, when the user is not authenticated.
+- The application user interface (UI) to rolls the dices, when the user is authenticated.
+
+Since our UI will be very basic, we'll just use a single HTML page for both.
+Let's add a first section inside the `<body>` tag of the `packages/website/index.html` file to display the login page:
+
+```html
+<!-- Login UI -->
+<section id="login" hidden>
+  <h2>You need to be logged in to access the app</h2>
+  <button id="loginButton">Login</button>
+</section>
+```
+
+As you can see, nothing fancy here. We use the `hidden` attribute to hide the section by default, and we'll use JavaScript to show it when needed.
+
+Next, we'll add a section to display the application UI below:
+
+```html
+<!-- Application UI -->
+<section id="app" hidden>
+  <!-- Show login status -->
+  <h2>Welcome, <span id="user"></span>
+  <button id="logoutButton">Logout</button></h2>
+  <!-- Update user settings -->
+  <fieldset id="settings">
+    <legend>User settings</legend>
+    <label>
+      <span>Dice sides:</span>
+      <input type="number" min="0" max="100" id="sides" value="6" />
+    </label>
+    <button id="saveButton">Save</button>
+  </fieldset>
+  <br>
+  <!-- Roll dices -->
+  <fieldset id="dices">
+    <legend>Dices</legend>
+    <label>
+      <span>Count</span>
+      <input type="number" min="0" id="count" value="10" />
+    </label>
+    <button id="rollButton">Roll</button>
+    <hr>
+    <label>
+      <span>Max</span>
+      <input type="number" min="0" id="max" value="10" />
+    </label>
+    <button id="historyButton">Get last rolls</button>
+  </fieldset>
+  <br>
+  <!-- Display the result -->
+  <fieldset>
+    <legend>Results</legend>
+    <div id="result"></div>
+  </fieldset>
+```
+
+There's a bit more in this section, but it's still pretty straighforward. We display the login status at the top, and have a few inputs and buttons to logout, update the user settings and roll the dices. We also have a `<div>` at the bottom to display the results.
+
+That's it for the HTML, we can now move on to the JavaScript code.
+
+### Adding the JavaScript code
+
+We're use JS code to make the glue between our UI and the APIs. We'll use the [Fetch API](https://developer.mozilla.org/docs/Web/API/Fetch_API) to make the HTTP requests, and the [DOM API](https://developer.mozilla.org/docs/Web/API/Document_Object_Model) to interact with the HTML elements.
+
+Open the `packages/website/main.js` file and add the following code:
+
+```js
+const apiUrl = '/api';
+const sidesInput = document.getElementById('sides');
+const countInput = document.getElementById('count');
+const maxInput = document.getElementById('max');
+const resultDiv = document.getElementById('result');
+```
+
+We start by defining the base URL of our APIs, and we get references to the HTML elements we'll need to interact with. [Azure Static Web Apps (SWA)](https://learn.microsoft.com/azure/static-web-apps/), the host we'll use later for our website, allows to configure a backend API under the `/api` path. We'll use this path to make requests to gateway service.
+
+<div class="tip" data-title="tip">
+
+> You might wonder why we don't call the gateway service directly? Using the SWA API proxy have two benefits:
+> - It handles authentication for us, checking that the user is logged in before allowing access to the APIs.
+> - It allows to use the same domain for the website and the APIs, which prevent running into [CORS issues](https://developer.mozilla.org/docs/Web/HTTP/CORS), a security mechanism that prevents a website from making requests to a different domain.
+
+</div>
+
+Next, we'll add functions to call our APIs:
+
+```js
+async function getUserSettings() {
+  const response = await fetch(`${apiUrl}/settings`);
+  if (response.ok) {
+    const { sides } = await response.json();
+    sidesInput.value = sides;
+  } else {
+    resultDiv.innerHTML = 'Cannot load user settings';
+  }
+}
+
+async function saveUserSettings() {
+  const sides = sidesInput.value;
+  const response = await fetch(`${apiUrl}/settings`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sides }),
+  });
+  if (response.ok) {
+    resultDiv.innerHTML = 'User settings saved';
+  } else {
+    resultDiv.innerHTML = `Cannot save user settings: ${response.statusText}`;
+  }
+}
+
+async function rollDices() {
+  const count = countInput.value;
+  const response = await fetch(`${apiUrl}/rolls`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ count }),
+  });
+  if (response.ok) {
+    const json = await response.json();
+    resultDiv.innerHTML = json.result.join(', ');
+  } else {
+    resultDiv.innerHTML = `Cannot roll dices: ${response.statusText}`;
+  }
+}
+
+async function getRollHistory() {
+  const max = maxInput.value;
+  const response = await fetch(`${apiUrl}/rolls/history?max=${max}`);
+  if (response.ok) {
+    const json = await response.json();
+    resultDiv.innerHTML = json.result.join(', ');
+  } else {
+    resultDiv.innerHTML = `Cannot get roll history: ${response.statusText}`;
+  }
+}
+```
+
+The code here is similar here to the code we wrote for the gateway service, except that we use the value from our HTML inputs, and output the result in the `resultDiv` element using the `innerHTML` property.
+
+After that, we'll add a few more helper functions to handle the user authentication workflow:
+
+```js
+async function getUser() {
+  try {
+    const response = await fetch(`/.auth/me`);
+    if (response.ok) {
+      const json = await response.json();
+      return json.clientPrincipal;
+    }
+  } catch {}
+  return undefined;
+}
+
+function login() {
+  window.location.href = `/.auth/login/github`;
+}
+
+function logout() {
+  window.location.href = `/.auth/logout`;
+}
+```
+
+SWA provides various [authentication endpoints](https://learn.microsoft.com/azure/static-web-apps/authentication-authorization) to manage the user authentication workflow:
+- `/.auth/me` returns a `clientPrincipal` object if the user is logged in, or `null` if the user is not logged in.
+- `/.auth/login/<provider>` redirects the user to the login page of specified provider. In our case, we use the `github` provider.
+- `/.auth/logout` logs the user out.
+
+The `getUser` function uses the SWA authentication endpoint to get the user information, and return either its details `undefined` if the user is not logged.
+
+The `login` and `logout` functions redirects the user to the login or logout page, using the `window.location.href` property.
+
+Finally, we'll add a few lines of code to initialize the UI and wire everything together:
+
+```js
+async function main() {
+  // Check if user is logged in
+  const user = await getUser();
+
+  if (user) {
+    // Load user settings
+    await getUserSettings();
+    
+    document.getElementById('app').hidden = false;
+    document.getElementById('user').innerHTML = user.userDetails;
+  } else {
+    document.getElementById('login').hidden = false;
+  }
+
+  // Setup event handlers
+  document.getElementById('loginButton').addEventListener('click', login);
+  document.getElementById('logoutButton').addEventListener('click', logout);
+  document.getElementById('saveButton').addEventListener('click', saveUserSettings);
+  document.getElementById('rollButton').addEventListener('click', rollDices);
+  document.getElementById('historyButton').addEventListener('click', getRollHistory);
+}
+
+main();
+```
+
+The `main()` function that we call at startup first checks if the user is logged in, and if so, loads the user settings and displays the application UI. Otherwise, it displays the login button. Then, it sets up all event handlers for the various buttons of our UI.
+
+### Configuring the website routing
+
+SWA allows to define a [configuration file](https://learn.microsoft.com/azure/static-web-apps/configuration) to customize various features of the host, including routing and authorization.
+
+Create a new file named `staticwebapp.config.json` in the `packages/website/public` folder, and add the following content:
+
+```json
+{
+  "routes": [
+    {
+      "route": "/api/*",
+      "allowedRoles": ["authenticated"]
+    }
+  ],
+  "navigationFallback": {
+    "rewrite": "/index.html"
+  }
+}
+```
+
+TODO: complete
+TODO: raise issue about the rewrite
+
+### Setting up the SWA CLI
+
+Because we make use of specific SWA features, we can't test our website locally using only the Vite development server, because we need the authentication server and API proxy. Thankfully, SWA provides a [CLI](https://github.com/Azure/static-web-apps-cli) that emulates the SWA host locally, so we can test our website locally.
+
+The SWA CLI is available as a Node.js package, so we'll start by installing it first as a development dependency:
+
+```bash
+cd packages/website
+npm install --save-dev @azure/static-web-apps-cli
+```
+
+Next we'll configure the SWA CLI for our project by adding a new `swa-cli.config.json` file in the `packages/website` folder:
+
+```json
+{
+  "$schema": "https://aka.ms/azure/static-web-apps-cli/schema",
+  "configurations": {
+    "website": {
+      "appLocation": ".",
+      "outputLocation": "dist",
+      "run": "npm run dev",
+      "appBuildCommand": "npm run build",
+      "appDevserverUrl": "http://localhost:5173",
+      "apiDevserverUrl": "http://localhost:4003",
+      "start": {
+        "apiLocation": "__dummy"
+      }
+    }
+  }
+}
+```
+
+This file allows to configure the various options of the SWA CLI, including the location of the website code, the commands to build and run the website, and the URLs of the development servers.
+
+Then, we'll add a new `start` script to our `package.json` file to start the SWA CLI:
+
+```json
+  "scripts": {
+    "start": "swa start",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+``` 
+
+TODO: cli fix: vite + api dev server url question
+
+### Testing our application
+
+We're now ready to test our whole application locally. To do so, we need to start in parallel the SWA CLI and the Docker compose environment with our services.
+
+To make this easier, we already set up a few script in the `package.json` located at the root of the project.
+
+```json
+  "scripts": {
+    "start": "concurrently npm:start:* --kill-others",
+    "start:services": "docker compose up",
+    "start:website": "npm run start --workspace=website",
+    "build:website": "npm run build --workspace=website",
+    "docker:build": "npm run docker:build --if-present --workspaces "
+  },
+```
+
+Here's what each script does:
+- `start` uses [concurrently](https://www.npmjs.com/package/concurrently) package to run multiple scripts in parallel, here we use it to start all the NPM scripts matching the `start:*` pattern
+- `start:services` starts the Docker compose environment with our services
+- `start:website` starts the SWA CLI with our website
+- `build:website` builds our website for production
+- `docker:build` builds all the Docker images for our services
+
+In short, we can start our complete application locally by running `npm start` at the root of the project:
+
+```bash
+# Go back to the project's root
+cd ../..
+npm start
+```
+
+This may take a few seconds to start everything, but after a while VS Code should propose you to open the application running on port `4280` in your browser:
+
+![Screenshot of VS Code showing "Open in Browser" dialog](./assets/vscode-open-browser.png)
+
+Select **Open in Browser** to open the website.
+
+<div class="tip" data-title="tip">
+
+> If you don't see the dialog, you can select the **Ports** tab in the bottom panel, and click on the "Local Address" link next to port `4280`:
+>
+> ![Screenshot of VS Code showing the Ports panel](./assets/vscode-ports.png)
+
+</div>
+
+You should see the login page of our application:
+
+![Screenshot of the login page](./assets/app-login.png)
+
+If you select **Login**, you'll be redirected to the SWA CLI authentication emulator login page:
+
+![Screenshot of the SWA CLI login page](./assets/swa-login.png)
+
+This is a fake login page made for local testing, where you can enter various parameters to simulate different users. Fill in any **Username** and select **Login**.
+
+You should be redirected back to the application main UI:
+
+![Screenshot of the application main UI](./assets/app-ui.png)
+
+You can now test the application as you would normally do, trying to update your settings, roll the dice, etc.
+
+After you're done testing, you can stop the application by pressing `Ctrl+C` in the terminal.
 
 ---
 
 ## Azure setup
-- Setup azure account
-- Explain SWA / ACR / ACA / CosmosDB
+- Setup azure account: script: explain what it does
+
+### Introducing Azure services
+- Explain SWA / ACR / ACA / CosmosDB / Registry / Log analytics / Azure Monitor
+
+### Architecture details
+
+- Explain some of the setup: gateway public, other microservices private, SWA API proxy...
+
+### Creating the infrastructure
+
 - Explain IaC / Bicep
 - Use provided Bicep templates + AZ CLI command to create infra
-- Explain some of the setup: gateway public, other microservices private, SWA API proxy...
 
 ---
 
+<div class="info" data-title="skip notice">
+
+> This step is entirely optional, you can skip it if you want to jump directly to the next section. In that case, your services won't persist the data and continue to use the in-memory storage, but you'll still be able to test and deploy the application.
+
+</div>
+
 ## Connecting database
 
-- Explain CosmosDB
+- Explain CosmosDB NoSQL
 - provide connection string in env + adapt code for Settings API
 - provide connection string in env + adapt code for Dice API
 - test locally
