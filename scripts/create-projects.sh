@@ -112,6 +112,11 @@ echo -e '{
 }
 ' > gateway-api/package.json
 
+echo -e "
+// Workaround from https://stackoverflow.com/a/72416352/599991
+require('node:dns').setDefaultResultOrder('ipv4first');
+" >> gateway-api/bin/www
+
 ##############################################################################
 # Website
 ##############################################################################
