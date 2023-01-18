@@ -122,7 +122,7 @@ This will start the creation of a dev container environment, which is a pre-conf
 
 <div class="info" data-title="note">
 
-> You don't have to worry about Codespaces usage cost for this workshop, as it's free for forks of our template repository. For personal usage, Codespaces includes up to 60 hours of free usage per month for all GitHub users, see [the pricing details here](https://github.com/features/codespaces).
+> Codespaces includes up to 60 hours of free usage per month for all GitHub users, see [the pricing details here](https://github.com/features/codespaces).
 
 </div>
 
@@ -1517,8 +1517,15 @@ Create a new file named `staticwebapp.config.json` in the `packages/website/publ
 }
 ```
 
-TODO: complete
-TODO: raise issue about the rewrite
+We're defining two things here: the routing rules, and the navigation fallback. We add a routing rules to only allow access to our API to authenticated users. SWA provides two built-in roles: `authenticated` and `anonymous`. We use the `authenticated` role here, because we want to make sure that only authenticated users can access our API. If a user tries to access our API without being authenticated, it will return a `401 Unauthorized` response.
+
+<div class="info" data-title="info">
+
+> Routing options also allows to define redirections, rewriting, caching headers, and more. See the [documentation](https://learn.microsoft.com/azure/static-web-apps/configuration) for more details.
+
+</div>
+
+The navigation fallback is used to redirect all requests to unknown resources to the `index.html` file. This is mandatory for single-page applications, though we're only using it here to make sure that you always end up on the index page.
 
 ### Setting up the SWA CLI
 
@@ -1564,8 +1571,6 @@ Then, we'll add a new `start` script to our `package.json` file to start the SWA
     "preview": "vite preview"
   },
 ``` 
-
-TODO: cli fix: vite + api dev server url question
 
 ### Testing our application
 
@@ -1618,7 +1623,7 @@ You should see the login page of our application:
 
 If you select **Login**, you'll be redirected to the SWA CLI authentication emulator login page:
 
-![Screenshot of the SWA CLI login page](./assets/swa-login.png)
+![Screenshot of the SWA CLI login page](./assets/swa-cli-auth.png)
 
 This is a fake login page made for local testing, where you can enter various parameters to simulate different users. Fill in any **Username** and select **Login**.
 
@@ -1633,7 +1638,31 @@ After you're done testing, you can stop the application by pressing `Ctrl+C` in 
 ---
 
 ## Azure setup
-- Setup azure account: script: explain what it does
+
+Azure is a cloud platform that provides a wide range of services to build, deploy, and manage applications. We'll use various Azure services in this workshop to host our application.
+
+First, you need to make sure you have an Azure account. If you don't have one, you can create a free account including Azure credits on the [Azure website](https://azure.microsoft.com/free/).
+
+<div class="important" data-title="important">
+
+> If you're following this workshop in-person at SnowCamp, you can use the following link to get a 50$ Azure Pass credit: [redeem your Azure Pass](https://azcheck.in/sno230125)
+
+</div>
+
+Once you have your Azure account, open a terminal at the root of the project and run:
+
+```bash
+.azure/setup.sh
+```
+
+This script uses the [Azure CLI](https://learn.microsoft.com/cli/azure) and [GitHub CLI](https://cli.github.com/) to do the following:
+- Login into your Azure account
+- Select a subscription to use
+- Create a [service principal](https://learn.microsoft.com/azure/active-directory/develop/howto-create-service-principal-portal), a token that will be used to create or update resources in Azure
+- Login into your GitHub account
+- Add the `AZURE_CREDENTIALS` secret to your GitHub repository, with your the service principal token
+
+
 
 ### Introducing Azure services
 - Explain SWA / ACR / ACA / CosmosDB / Registry / Log analytics / Azure Monitor

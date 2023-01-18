@@ -1,39 +1,26 @@
 # TODO solution
-- [x] Feedback npm CI with docker + npm workspaces
-- [x] CosmosDB
-- [ ] Add correlation ID in logs
-- [ ] Bicep
-  - [x] update setup script
-  - [ ] update build script
-  - [ ] update deploy script
-- [ ] GitHub Actions deployment
-- [ ] devcontainer with vscode extensions
-- [ ] secrets bash array with newlines -> nope?
+- [ ] provide zip of each service built by CI, in packages
+- [ ] add in description mention of 3 frameworks
+- [ ] URL -> host in outputs
+
+- [ ] Add correlation ID in logs (Dapr?)
+
+## Nice to have
+- [ ] devcontainer with vscode extensions (what's missing? Db explorer?)
+- [c] cosmosdb emulator in compose file? 
+- [ ] secrets bash array with newlines -> nope? ask Chris
 - [ ] env file uppercase
 - [ ] URLs and DB CS in format <name>_URL
 - [ ] bash strict mode
 
 # Workshop
-- [x] Simple website to push/get requests with auth [SWA]
-- [x] CosmosDB to store results
 <!-- - [ ] Event Grid to pass events -->
 <!-- - [ ] Azure Function to process events and store in DB -->
-- [x] Microservices problems
-  * 3 services:
-    - API gateway - N Dice Rolls
-    - Dice Rolls API - DB / APIs: new roll dice / get last N rolls - DB
-    - Settings API - Store User<>Dice Faces preferences - DB
-  <!-- * [ ] Service to service communication/auth -->
-  * Service discovery
-  * Load balancing / scaling
-  * Monitoring
+<!-- * [ ] Service to service communication/auth -->
+  * Service discovery?
   * Logging/Tracing
 
-- [x] website
-  * [x] Login
-  * [x] Set dice type preference
-  * [x] Roll N dices and show results / time
-  * [x] Show last N rolls
+- [ ] website nice CSS?
 
 # Plan
 

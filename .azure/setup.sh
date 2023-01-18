@@ -3,11 +3,11 @@
 # Usage: ./setup.sh <project_name> [environment_name] [location] [options]
 # Setup the current GitHub repo for deploying on Azure.
 ##############################################################################
-# v1.0.2 | dependencies: Azure CLI, GitHub CLI, jq
+# v1.1.2 | dependencies: Azure CLI, GitHub CLI, jq
 ##############################################################################
 
-set -e
-cd $(dirname ${BASH_SOURCE[0]})
+set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")"
 if [[ -f ".settings" ]]; then
   source .settings
 fi
@@ -21,12 +21,14 @@ showUsage() {
   echo "  -s, --skip-login    Skip Azure and GitHub login steps"
   echo "  -t, --terminate     Remove current setup and delete deployed resources"
   echo "  -l, --ci-login      Only perform Azure CLI login using environment credentials"
+  echo "  -c, --use-code      Use device code login flow instead of browser"
   echo
 }
 
 skip_login=false
 terminate=false
 ci_login=false
+use_code=false
 args=()
 
 while [[ $# -gt 0 ]]; do
@@ -43,11 +45,15 @@ while [[ $# -gt 0 ]]; do
       ci_login=true
       shift
       ;;
+    -c|--use-code)
+      use_code=true
+      shift
+      ;;
     --help)
       showUsage
       exit 0
       ;;
-    -*|--*)
+    --*|-*)
       showUsage
       echo "Unknown option $1"
       exit 1
@@ -73,17 +79,17 @@ if ! command -v az &> /dev/null; then
   exit 1
 fi
 
-if [[ "$ci_login" = true ]]; then
+if [[ "$ci_login" == true ]]; then
   echo "Logging in to Azure using \$AZURE_CREDENTIALS..."
-  if [[ -z "${AZURE_CREDENTIALS}" ]]; then
+  if [[ -z "${AZURE_CREDENTIALS:-}" ]]; then
     echo "Azure credentials not found."
     echo "Please run .azure/setup.sh locally to setup your deployment."
     exit 1
   fi
-  client_id="$(echo $AZURE_CREDENTIALS | jq -r .clientId)"
-  client_secret="$(echo $AZURE_CREDENTIALS | jq -r .clientSecret)"
-  subscription_id="$(echo $AZURE_CREDENTIALS | jq -r .subscriptionId)"
-  tenant_id="$(echo $AZURE_CREDENTIALS | jq -r .tenantId)"
+  client_id="$(echo "$AZURE_CREDENTIALS" | jq -r .clientId)"
+  client_secret="$(echo "$AZURE_CREDENTIALS" | jq -r .clientSecret)"
+  subscription_id="$(echo "$AZURE_CREDENTIALS" | jq -r .subscriptionId)"
+  tenant_id="$(echo "$AZURE_CREDENTIALS" | jq -r .tenantId)"
   az login \
     --service-principal \
     --username "${client_id}" \
@@ -106,20 +112,56 @@ if [[ -z "$project_name" ]]; then
   exit 1
 fi
 
-if [[ "$skip_login" = false ]]; then
+if [[ "$skip_login" == false ]]; then
+  az_login_options=""
+  if [[ "$use_code" == true || "${CODESPACES:-}" == true ]]; then
+    az_login_options="--use-device-code"
+  fi
+
   echo "Logging in to Azure..."
-  az login
-  echo "Logging in to GitHub..."
-  gh auth login
+  az login --query "[].{name:name,id:id}" $az_login_options
+  echo "Listed above are your available subscriptions."
+  echo
+
+  echo "Currently selected subscription is:"
+  az account show \
+      --query "{name:name,id:id}" \
+      --output tsv
+  echo
+  read -r -n 1 -p "Is your current subscription correct? (Y/n) " is_correct
+  echo
+
+  if [[ "$is_correct" == "n" ]]; then
+    read -r -p "Enter your subscription name or ID: " az_sub
+    az account set \
+      --subscription "$az_sub" \
+      --query "{name:name,id:id}" \
+      --output tsv
+    echo "Azure default subscription has been updated successfully."
+  fi
+
+  if [[ -z "${GITHUB_TOKEN:-}" || "${CODESPACES:-}" == true ]]; then
+    unset GITHUB_TOKEN
+    echo "Logging in to GitHub..."
+    gh auth login
+
+    if [[ -n "${GITHUB_REPOSITORY:-}" ]]; then
+      echo "Setting default GitHub repository to '$GITHUB_REPOSITORY'..."
+      gh repo set-default "$GITHUB_REPOSITORY"
+    fi
+  else
+    echo "GITHUB_TOKEN is already set, skipping GitHub login."
+  fi
+
   echo "Login successful."
 fi
 
-if [[ "$terminate" = true ]]; then
+if [[ "$terminate" == true ]]; then
   echo "Deleting current setup..."
-  .azure/infra.sh down ${project_name} ${environment} ${location}
+  .azure/infra.sh down "${project_name}" "${environment}" "${location}"
   echo "Retrieving GitHub repository URL..."
   remote_repo=$(git config --get remote.origin.url)
-  gh secret delete AZURE_CREDENTIALS -R $remote_repo
+  gh secret delete AZURE_CREDENTIALS -R "$remote_repo"
   echo "Setup deleted."
 else
   echo "Retrieving Azure subscription..."
@@ -141,8 +183,12 @@ else
   echo "Retrieving GitHub repository URL..."
   remote_repo=$(git config --get remote.origin.url)
   echo "Setting up GitHub repository secrets..."
-  gh secret set AZURE_CREDENTIALS -b"$service_principal" -R $remote_repo
-  echo "Triggering Azure deployment..."
-  gh workflow run deploy.yml
+  gh secret set AZURE_CREDENTIALS -b"$service_principal" -R "$remote_repo"
+
+  if [[ -f ".github/workflows/deploy.yml" ]]; then
+    echo "Found deploy.yml workflow, triggering deployment..."
+    gh workflow run deploy.yml
+  fi
+
   echo "Setup success!"
 fi
