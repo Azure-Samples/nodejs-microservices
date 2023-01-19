@@ -1,17 +1,22 @@
 # TODO solution
 - [ ] provide zip of each service built by CI, in packages
+  * settings / no DB
+  * dice / no DB
+  * gateway
+  * website
+  * docker-compose.yml
+  * deploy.yml
+
 - [ ] add in description mention of 3 frameworks
-- [ ] URL -> host in outputs
+- [x] URL -> host in outputs
 
 - [ ] Add correlation ID in logs (Dapr?)
 
 ## Nice to have
 - [ ] devcontainer with vscode extensions (what's missing? Db explorer?)
 - [c] cosmosdb emulator in compose file? 
-- [ ] secrets bash array with newlines -> nope? ask Chris
-- [ ] env file uppercase
-- [ ] URLs and DB CS in format <name>_URL
-- [ ] bash strict mode
+- [x] env file uppercase
+- [x] bash strict mode
 
 # Workshop
 <!-- - [ ] Event Grid to pass events -->
