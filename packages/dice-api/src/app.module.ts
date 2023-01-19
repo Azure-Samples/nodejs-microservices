@@ -23,7 +23,8 @@ import { RollsController } from './rolls.controller';
         }
         logger.warn('No DB connection string provided, using mock database.');
         return new MockDbService();
-      }
-    }],
+      },
+    },
+  ],
 })
 export class AppModule {}

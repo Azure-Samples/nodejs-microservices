@@ -10,7 +10,7 @@ export interface Roll {
 @Injectable()
 export class MockDbService {
   private mockDb: Roll[] = [];
-  
+
   async addRoll(roll: Roll) {
     await this.delay();
     this.mockDb.push(roll);
@@ -19,9 +19,7 @@ export class MockDbService {
 
   async getLastRolls(max: number, sides: number) {
     await this.delay();
-    return this.mockDb
-      .filter((roll) => roll.sides === sides)
-      .slice(-max);
+    return this.mockDb.filter((roll) => roll.sides === sides).slice(-max);
   }
 
   private async delay() {
@@ -40,10 +38,10 @@ export class DbService {
 
   async init() {
     const { database } = await this.client.databases.createIfNotExists({
-      id: 'dice-db'
+      id: 'dice-db',
     });
     const { container } = await database.containers.createIfNotExists({
-      id: 'rolls'
+      id: 'rolls',
     });
     this.rolls = container;
   }
@@ -58,8 +56,8 @@ export class DbService {
         query: `SELECT TOP @max * from r WHERE r.sides = @sides ORDER BY r.timestamp DESC`,
         parameters: [
           { name: '@sides', value: sides },
-          { name: '@max', value: max }
-        ]
+          { name: '@max', value: max },
+        ],
       })
       .fetchAll();
     return resources.sort((a, b) => a.timestamp - b.timestamp);
