@@ -22,3 +22,4 @@ jobs:
         tag: latest
         artifacts: "dist/*.tar.gz"
         allowUpdates: true
+        removeArtifacts: true
