@@ -1828,19 +1828,247 @@ In the previous section, we created a Cosmos DB account configured with a SQL AP
 
 ### Adding database to the Settings service
 
+We'll start by adding the database to the Settings service. First, we need to install the `@azure/cosmos` package:
 
+```bash
+cd packages/settings-api
+npm install @azure/cosmos
+```
 
-- provide connection string in env + adapt code for Settings API
+Then we'll make some changes to file `packages/settings-api/plugins/database.js` we created earlier. First, we need to add an import for the `@azure/cosmos` package:
+
+```js
+import { CosmosClient } from '@azure/cosmos';
+```
+
+Next, we'll add a new `Database` at the bottom of the file:
+
+```js
+class Database {
+  constructor(connectionString) {
+    this.client = new CosmosClient(connectionString)
+  }
+
+  async init() {
+    const { database } = await this.client.databases.createIfNotExists({
+      id: 'settings-db'
+    });
+    const { container } = await database.containers.createIfNotExists({
+      id: 'settings'
+    });
+    this.settings = container;
+  }
+
+  async saveSettings(userId, settings) {
+    await this.settings.items.upsert({ id: userId, settings });
+  }
+  
+  async getSettings(userId) {
+    const { resource } = await this.settings.item(userId).read();
+    return resource?.settings;
+  }
+}
+```
+
+We're using the `@azure/cosmos` SDK to implement the same methods `saveSettings()` and `getSettings()` we used in our in-memory database.
+
+In addition, we added a new method `init()` that we use to create the database and the container if they don't exist yet. Because the SDK functions called here are asynchronous, we could not use the class constructor for that.
+
+Because Azure Cosmos DB is a NoSQL database, besides creating a database in our account, we also need to create a container to store the data. A container is a place to store a collection of documents, called **items** here.
+
+Finally, we need to update how we register the database plugin. Replace the existing `export default fp(async function (fastify, opts) { ... }` function with:
+  
+```javascript
+export default fp(async function (fastify, opts) {
+  const connectionString = process.env.DATABASE_CONNECTION_STRING;
+  if (connectionString) {
+    const db = new Database(connectionString);
+    await db.init();
+    fastify.decorate('db', db);
+    fastify.log.info('Connection to database successful.');
+  } else {
+    fastify.decorate('db', new MockDatabase());
+    fastify.log.warn('No DB connection string provided, using mock database.');
+  }
+});
+```
+
+Here we're checking if the `DATABASE_CONNECTION_STRING` environment variable is set. In that case, we create a new `Database` instance and initialize it. Otherwise, we use the `MockDatabase` we created earlier.
+
+#### Testing the database connection
+
+We can now test the database connection. For that, we need to retrieve the connection string for the database.
+As it's located in the `.azure/.prod.env` file created when we deployed the infrastructure, we can use this command to export it as an environment variable:
+
+```bash
+source ../../.azure/.prod.env
+export DATABASE_CONNECTION_STRING
+```
+
+Then we can start the Settings service:
+
+```bash
+npm start | pino-pretty
+```
+
+If you see the message `Connection to database successful` in the console logs, the connection is working. You can test the API as usual, using the `api.http` file.
+
+When you checked that everything is working, stop the server by pressing `Ctrl+C` in the terminal.
 
 ### Adding database to the Dice service
 
-- provide connection string in env + adapt code for Dice API
+Now we'll do the same for the Dice service. Again, we need to install the `@azure/cosmos` package:
 
-### Testing the database locally
-- test locally
+```bash
+cd ../dice-api
+npm install @azure/cosmos
+```
+
+Then we'll update the file `packages/dice-api/src/db.service.ts`. First, add this import of the `@azure/cosmos` package:
+
+```ts
+import { Container, CosmosClient } from '@azure/cosmos';
+```
+
+Then rename the existing `DbService` class to `MockDbService`.
+
+After than, add this new `DbService` class at the bottom of the file:
+
+```ts
+@Injectable()
+export class DbService {
+  client: CosmosClient;
+  rolls: Container;
+
+  constructor(connectionString: string) {
+    this.client = new CosmosClient(connectionString)
+  }
+
+  async init() {
+    const { database } = await this.client.databases.createIfNotExists({
+      id: 'dice-db',
+    });
+    const { container } = await database.containers.createIfNotExists({
+      id: 'rolls',
+    });
+    this.rolls = container;
+  }
+
+  async addRoll(roll: Roll) {
+    await this.rolls.items.create(roll);
+  }
+
+  async getLastRolls(max: number, sides: number) {
+    const { resources } = await this.rolls.items
+      .query({
+        query: `SELECT TOP @max * from r WHERE r.sides = @sides ORDER BY r.timestamp DESC`,
+        parameters: [
+          { name: '@sides', value: sides },
+          { name: '@max', value: max },
+        ],
+      })
+      .fetchAll();
+    return resources.sort((a, b) => a.timestamp - b.timestamp);
+  }
+}
+```
+
+We're doing here something very similar to what we did for the Settings service. We're using the `@azure/cosmos` SDK to implement the same methods `addRoll()` and `getLastRolls()` we used in our in-memory database, and added a new method `init()` to create the database and container if they don't exist yet.
+
+If we take a look at the `getLastRolls()` method, we can see something interesting. We're using a SQL query to retrieve the last rolls. Notice that it's a [parameterized query](https://learn.microsoft.com/azure/cosmos-db/nosql/query/parameterized-queries), using the `max` and `sides` parameters of the function. While using a template string like:
+```js
+`SELECT TOP ${max} * from r WHERE r.sides = ${sides} ORDER BY r.timestamp DESC`
+```
+would be working, it's not safe against SQL injection attacks because it's comes from user input. Using parameterized queries is the recommended way to prevent these kind of attacks, as the parameters will be properly escaped by the SDK.
+
+You can also notice that at the end of the function, we're sorting the results by timestamp. In the SQL query, we're using a reverse `ORDER BY` to get the last rolls, but we need to sort them again in the code to get them in the right order. This is one limitation of the SQL language support by Azure Cosmos DB, as it's not possible to use a subquery here to sort the results.
+
+Finally, we need to update the file `app.module.ts`. In the `providers`, replace the existing `DbService` with this code:
+
+```ts
+{
+  provide: DbService,
+  useFactory: async () => {
+    const logger = new Logger(DbService.name);
+    const connectionString = process.env.DATABASE_CONNECTION_STRING;
+    if (connectionString) {
+      const db = new DbService(connectionString);
+      await db.init();
+      logger.log('Connection to database successful.');
+      return db;
+    }
+    logger.warn('No DB connection string provided, using mock database.');
+    return new MockDbService();
+  },
+}
+```
+
+Instead of using a standard provider, we're using a [factory](https://docs.nestjs.com/fundamentals/custom-providers#factory-providers-usefactory) to create our provider dynamically. A factory provider is a function that returns the actual provider.
+
+In the same fashion as the Settings service, we're checking if the `DATABASE_CONNECTION_STRING` environment variable is set, and if it is, we're creating a `DbService` instance with the connection string, otherwise we create a `MockDbService` instance instead.
+
+After that, we need to update two imports. Replace:
+
+```ts
+import { Module } from '@nestjs/common';
+// ...
+import { DbService } from './db.service';
+```
+
+with
+
+```ts
+import { Module, Logger } from '@nestjs/common';
+// ...
+import { DbService, MockDbService } from './db.service';
+```
+
+You may still a few errors in the code due to formatting, but it can be fixed automatically the command:
+
+```bash
+npm run format
+```
+
+#### Testing the database connection
+
+We can now test the database connection. Just like with the Settings API, we can retrieve the connection string for the database with this command:
+
+```bash
+source ../../.azure/.prod.env
+export DATABASE_CONNECTION_STRING
+```
+
+Then start the Dice service:
+
+```bash
+npm start | pino-pretty
+```
+
+If you see the message `Connection to database successful` in the console logs, the connection is working. Again, you can test the API using the `api.http` file.
+
+When you checked that everything is working, stop the server by pressing `Ctrl+C` in the terminal.
 
 ### Looking at the data
-- look in data explorer
+
+By now you should have some data in your database. Sometimes, it can be interesting to look at the data directly in the database, for example to check if the data is correct, or to debug an issue.
+
+We can do that directly using VS Code, thanks to the [Azure Databases extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-cosmosdb).
+
+First, let's get our connection string. In a terminal run this command and copy the output:
+
+```bash
+echo $DATABASE_CONNECTION_STRING
+```
+
+Then select the **Azure icon** in the left panel, then click **Attach Database Account** under the Workspace panel:
+
+![Screenshot of Azure Databases extension showing how to connect to a database](./images/vscode-connect-database.png)
+
+Select **SQL** for the **Database type**, then paste the connection string and press **Enter**.
+
+You should now see your database account in the panel. You can unfold it to see the databases, containers and items. If you select a document, you can see its content of the document in the right panel, and even edit it.
+
+![Screenshot of Azure Databases extension showing the content of a document](./images/vscode-document-content.png)
 
 ---
 
