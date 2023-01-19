@@ -31,7 +31,8 @@
 				"ms-azuretools.vscode-cosmosdb",
 				"ms-azuretools.vscode-azurecontainerapps",
 				"EditorConfig.EditorConfig",
-				"IronGeek.vscode-env"
+				"IronGeek.vscode-env",
+				"timonwong.shellcheck"
 			]
 		}
 	}
