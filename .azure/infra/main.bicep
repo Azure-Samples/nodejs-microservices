@@ -120,8 +120,8 @@ output containerAppEnvironmentName string = containerEnvironment.outputs.contain
 
 output containerNames array = containerNames
 output containerAppNames array = [for (name, i) in containerNames: containers[i].outputs.containerName]
-output containerAppUrls array = [for (name, i) in containerNames: containers[i].outputs.containerUrl]
+output containerAppHostnames array = [for (name, i) in containerNames: containers[i].outputs.containerHostname]
 
 output websiteNames array = websiteNames
 output staticWebAppNames array = [for (name, i) in websiteNames: websites[i].outputs.staticWebAppName]
-output staticWebAppPublicUrls array = [for (name, i) in websiteNames: websites[i].outputs.staticWebAppPublicUrl]
+output staticWebAppHostnames array = [for (name, i) in websiteNames: websites[i].outputs.staticWebAppHostname]

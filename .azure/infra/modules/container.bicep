@@ -123,4 +123,4 @@ resource container 'Microsoft.App/containerApps@2022-03-01' = {
 // ---------------------------------------------------------------------------
 
 output containerName string = container.name
-output containerUrl string = container.properties.configuration.ingress.fqdn
+output containerHostname string = container.properties.configuration.ingress.fqdn
