@@ -2,7 +2,7 @@
 
 Discover the fundamentals of microservices architecture and how to implement them from code to production, using Node.js, Docker and Azure.
 
-👉 [See the workshop](https://aka.ms/ws?src=gh:azure-samples/nodejs-microservices/main/docs/)
+👉 [See the workshop](https://aka.ms/ws/node-microservices)
 
 ## Prerequisites
 - Node.js v18+
