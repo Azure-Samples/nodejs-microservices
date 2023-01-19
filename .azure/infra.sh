@@ -3,7 +3,7 @@
 # Usage: ./infra.sh <command> <project_name> [environment_name] [location]
 # Manages the Azure infrastructure for this project.
 ##############################################################################
-# v0.9.5 | dependencies: Azure CLI, jq, perl
+# v0.9.6 | dependencies: Azure CLI, jq, perl
 ##############################################################################
 
 set -euo pipefail
@@ -34,11 +34,11 @@ showUsage() {
   echo
 }
 
-toLowerSnakeCase() {
+toUpperSnakeCase() {
   echo "${1}" |
     perl -pe 's/([a-z\d])([A-Z]+)/$1_$2/g' |
     perl -pe 's/[ _-]+/_/g' |
-    perl -ne 'print lc'
+    perl -ne 'print uc'
 }
 
 createSettings() {
@@ -52,7 +52,7 @@ createSettings() {
   # For each output, export the value to the env file and convert the key to
   # lower snake case.
   while IFS=$'\n' read -r output; do
-    ouput_name=$(toLowerSnakeCase "$(echo "$output" | jq -r '.[0]')")
+    ouput_name=$(toUpperSnakeCase "$(echo "$output" | jq -r '.[0]')")
     output_value=$(echo "$output" | jq -r '.[1] | @sh')
     if [ "$(echo "$output" | jq -r '.[2]')" == "Array" ]; then
       echo "${ouput_name}=(${output_value})" >> "${env_file}"
@@ -125,68 +125,68 @@ retrieveSecrets() {
   echo -e "\n${secrets_sep}\n" >> "${env_file}"
 
   # Get registry credentials
-  if [[ -n "${registry_name:-}" ]]; then
-    registry_username=$( \
+  if [[ -n "${REGISTRY_NAME:-}" ]]; then
+    REGISTRY_USERNAME=$( \
       az acr credential show \
-        --name "${registry_name}" \
+        --name "${REGISTRY_NAME}" \
         --query "username" \
         --output tsv \
       )
-    echo "registry_username='${registry_username}'" >> "${env_file}"
+    echo "REGISTRY_USERNAME='${REGISTRY_USERNAME}'" >> "${env_file}"
 
-    registry_password=$( \
+    REGISTRY_PASSWORD=$( \
       az acr credential show \
-        --name "${registry_name}" \
+        --name "${REGISTRY_NAME}" \
         --query "passwords[0].value" \
         --output tsv \
       )
-    echo "registry_password='${registry_password}'" >> "${env_file}"
+    echo "REGISTRY_PASSWORD='${REGISTRY_PASSWORD}'" >> "${env_file}"
   fi
 
   # Get storage account connection string
-  if [[ -n "${storage_account_name:-}" ]]; then
-    storage_account_connection_string=$( \
+  if [[ -n "${STORAGE_ACCOUNT_NAME:-}" ]]; then
+    STORAGE_ACCOUNT_CONNECTION_STRING=$( \
       az storage account show-connection-string \
-        --name "${storage_account_name}" \
+        --name "${STORAGE_ACCOUNT_NAME}" \
         --query "connectionString" \
         --output tsv \
       )
-    echo "storage_account_connection_string='${storage_account_connection_string}'" >> "${env_file}"
+    echo "STORAGE_ACCOUNT_CONNECTION_STRING='${STORAGE_ACCOUNT_CONNECTION_STRING}'" >> "${env_file}"
   fi
 
   # Get app insights instrumentation key and connection string
-  if [[ -n "${app_insights_name:-}" ]]; then
-    app_insights_instrumentation_key=$( \
+  if [[ -n "${APP_INSIGHTS_NAME:-}" ]]; then
+    APP_INSIGHTS_INSTRUMENTATION_KEY=$( \
       az resource show \
         --resource-group "${resource_group_name}" \
         --resource-type "Microsoft.Insights/components" \
-        --name "${app_insights_name}" \
+        --name "${APP_INSIGHTS_NAME}" \
         --query properties.InstrumentationKey \
         --output tsv \
       )
-    echo "app_insights_instrumentation_key='${app_insights_instrumentation_key}'" >> "${env_file}"
+    echo "APP_INSIGHTS_INSTRUMENTATION_KEY='${APP_INSIGHTS_INSTRUMENTATION_KEY}'" >> "${env_file}"
 
-    app_insights_connection_string=$( \
+    APP_INSIGHTS_CONNECTION_STRING=$( \
       az resource show \
         --resource-group "${resource_group_name}" \
         --resource-type "Microsoft.Insights/components" \
-        --name "${app_insights_name}" \
+        --name "${APP_INSIGHTS_NAME}" \
         --query properties.ConnectionString \
         --output tsv \
       )
-    echo "app_insights_connection_string='${app_insights_connection_string}'" >> "${env_file}"
+    echo "APP_INSIGHTS_CONNECTION_STRING='${APP_INSIGHTS_CONNECTION_STRING}'" >> "${env_file}"
   fi
 
   # Get cosmos db connection strings
-  if [[ -n "${database_name:-}" ]]; then
-    database_connection_string=$( \
+  if [[ -n "${DATABASE_NAME:-}" ]]; then
+    DATABASE_CONNECTION_STRING=$( \
       az cosmosdb keys list --type connection-strings \
-        --name "${database_name}" \
+        --name "${DATABASE_NAME}" \
         --resource-group "${resource_group_name}" \
         --query "connectionStrings[0].connectionString" \
         --output tsv \
       )
-    echo "database_connection_string='${database_connection_string}'" >> "${env_file}"
+    echo "DATABASE_CONNECTION_STRING='${DATABASE_CONNECTION_STRING}'" >> "${env_file}"
   fi
 
   # TODO: retrieve other secrets (swa tokens, etc.)
