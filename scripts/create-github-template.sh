@@ -5,7 +5,7 @@
 ##############################################################################
 
 set -euo pipefail
-cd $(dirname ${BASH_SOURCE[0]})
+cd "$(dirname "${BASH_SOURCE[0]}")"
 cd ..
 
 BASE_DIR=$(pwd)
@@ -13,11 +13,11 @@ TEMPLATE_HOME=/tmp/nodejs-microservices-template
 TEMPLATE_REPO=git@github.com:azure-samples/nodejs-microservices-template.git
 
 echo "Preparing GitHub project template..."
-rm -rf $TEMPLATE_HOME
-mkdir -p $TEMPLATE_HOME
+rm -rf "$TEMPLATE_HOME"
+mkdir -p "$TEMPLATE_HOME"
 find . -type d -not -path '*node_modules*' -not -path '*.git/*' -not -path './packages*' -exec mkdir -p '{}' "$TEMPLATE_HOME/{}" ';'
 find . -type f -not -path '*node_modules*' -not -path '*.git/*' -not -path './packages*' -exec cp -r '{}' "$TEMPLATE_HOME/{}" ';'
-cd $TEMPLATE_HOME
+cd "$TEMPLATE_HOME"
 rm -rf .git
 git init
 
@@ -35,9 +35,10 @@ rm -rf docs
 rm -rf .azure/.*.env
 rm -rf .azure/_*.sh
 mkdir -p docs/assets
-cp $BASE_DIR/docs/assets/architecture.drawio.png docs/assets/architecture.drawio.png
+cp "$BASE_DIR/docs/assets/architecture.drawio.png" docs/assets/architecture.drawio.png
 
 # Build script
+# shellcheck disable=SC2016
 echo -e '#!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
@@ -45,6 +46,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 ' > .azure/build.sh
 
 # Deploy script
+# shellcheck disable=SC2016
 echo -e '#!/usr/bin/env bash
 set -eu
 cd "$(dirname "${BASH_SOURCE[0]}")"
@@ -62,7 +64,7 @@ commit_sha="$(git rev-parse HEAD)"
 
 if [[ ${1-} == "--local" ]]; then
   echo "Local mode: skipping GitHub push."
-  open $TEMPLATE_HOME
+  open "$TEMPLATE_HOME"
 else
   # Update git repo
   git remote add origin $TEMPLATE_REPO
@@ -70,7 +72,7 @@ else
   git commit -m "chore: initial commit"
   git push -u origin main --force
 
-  rm -rf $TEMPLATE_HOME
+  rm -rf "$TEMPLATE_HOME"
 fi
 
 echo "Successfully updated project template."
