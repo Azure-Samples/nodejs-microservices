@@ -73,7 +73,7 @@ resource staticWebApp 'Microsoft.Web/staticSites@2021-03-01' = {
       backendResourceId: linkedBackendId
       region: location
     }
-    dependsOn: (linkedBackend && backendType == 'container') ? [container] : []
+    dependsOn: backendType == 'container' ? [container] : []
   }
 }
 
