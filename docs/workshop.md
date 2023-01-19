@@ -1,6 +1,6 @@
 ---
 short_title: Node.js Microservices
-description: Discover the fundamentals of microservices architecture and how to implement it from code to production, using Node.js, Docker and Azure.
+description: Discover the fundamentals of microservices architecture and how to implement it from code to production, using Node.js, Docker and Azure. You'll use Express, Fastify, and NestJS to build 3 microservices, and Vite to create the web interface of our application.
 type: workshop
 authors: Yohan Lasorsa
 contacts: '@sinedied'
@@ -25,16 +25,17 @@ We will build a complete application including a website with authentication and
 ## Goals and topics covered
 - Brief review of microservices architecture and its benefits
 - Create Node.js services using 3 differents frameworks
-  * NestJS
-  * Fastify
-  * Express
+  * [Express](https://expressjs.com/)
+  * [Fastify](https://www.fastify.io/)
+  * [NestJS](https://nestjs.com/)
+- Create a simple website using HTML and JavaScript with [Vite](https://vitejs.dev/)
 - Containerize services with Docker
 - Use Docker multi-stage builds
 - Connect services to their database
 - Setup a CI/CD pipeline with GitHub Actions
 - Deploy services to Azure Container Apps
 - Load testing and scaling
-- Log tracing and monitoring
+- Exploiting application logs
 
 ## Prerequisites
 
@@ -233,7 +234,7 @@ The only changes we made to the generated code is to remove the files we don't n
 
 <div class="info" data-title="skip notice">
 
-> If you want to skip the Settings API implementation and jump directly to the next section, run this command in the terminal to get the completed code directly: `TODO`
+> If you want to skip the Settings API implementation and jump directly to the next section, run this command in the terminal at the root of the project to get the completed code directly: `curl -fsSL https://github.com/Azure-Samples/nodejs-microservices/releases/download/latest/settings-api.tar.gz | tar -xvz`
 
 </div>
 
@@ -562,7 +563,7 @@ It can be a good idea to now commit the changes to the repository. Commits are c
 
 <div class="info" data-title="skip notice">
 
-> If you want to skip the Dice API implementation and jump directly to the next section, run this command in the terminal to get the completed code directly: `TODO`
+> If you want to skip the Dice API implementation and jump directly to the next section, run this command in the terminal to get the completed code directly: `curl -fsSL https://github.com/Azure-Samples/nodejs-microservices/releases/download/latest/dice-api.tar.gz | tar -xvz`
 
 </div>
 
@@ -871,7 +872,7 @@ After you checked that everything works as expected, commit the changes to the r
 
 <div class="info" data-title="skip notice">
 
-> If you want to skip the Gateway API implementation and jump directly to the next section, run this command in the terminal to get the completed code directly: `TODO`
+> If you want to skip the Gateway API implementation and jump directly to the next section, run this command in the terminal to get the completed code directly: `curl -fsSL https://github.com/Azure-Samples/nodejs-microservices/releases/download/latest/gateway-api.tar.gz | tar -xvz`
 
 </div>
 
@@ -1216,7 +1217,7 @@ For testing though, running all 3 services separately is a bit tedious (as you s
 
 <div class="info" data-title="skip notice">
 
-> If you want to skip the Docker compose details and jump directly to the next section, run this command in the terminal to get the completed code directly: `TODO`
+> If you want to skip the Docker compose details and jump directly to the next section, run this command in the terminal to get the completed code directly: `curl -fsSL https://github.com/Azure-Samples/nodejs-microservices/releases/download/latest/docker-compose.tar.gz | tar -xvz`
 
 </div>
 
@@ -1279,7 +1280,7 @@ When you're done, you can stop the services with `Ctrl+C` or by running `docker 
 
 <div class="info" data-title="skip notice">
 
-> If you want to skip the website implementation and jump directly to the next section, run this command in the terminal to get the completed code directly: `TODO`
+> If you want to skip the website implementation and jump directly to the next section, run this command in the terminal to get the completed code directly: `curl -fsSL https://github.com/Azure-Samples/nodejs-microservices/releases/download/latest/website.tar.gz | tar -xvz`
 
 </div>
 
@@ -1349,6 +1350,7 @@ Next, we'll add a section to display the application UI below:
     <legend>Results</legend>
     <div id="result"></div>
   </fieldset>
+</section>
 ```
 
 There's a bit more in this section, but it's still pretty straighforward. We display the login status at the top, and have a few inputs and buttons to logout, update the user settings and roll the dices. We also have a `<div>` at the bottom to display the results.
@@ -1535,7 +1537,7 @@ The SWA CLI is available as a Node.js package, so we'll start by installing it f
 
 ```bash
 cd packages/website
-npm install --save-dev @azure/static-web-apps-cli
+npm install --save-dev @azure/static-web-apps-cli@latest
 ```
 
 Next we'll configure the SWA CLI for our project by adding a new `swa-cli.config.json` file in the `packages/website` folder:
@@ -1824,7 +1826,7 @@ After your infrastructure is ready, we'll connect our microservices their respec
 
 Azure Cosmos DB is a fully managed NoSQL database service that offers multiple APIs, including SQL, MongoDB, Cassandra, Gremlin, and Azure Table storage. It's a globally distributed database, which means that your data can be replicated across multiple regions, and you can choose the closest region to your users to reduce latency.
 
-In the previous section, we created a Cosmos DB account configured with a SQL API. Surely, that sounds a bit strange, using SQL to access a NoSQL database? But don't worry, it's not a mistake. Cosmos DB is a multi-model database, which means that it can support different ways of accessing the data. SQL is the most common way of querying data, so it feels familiar to most developers and makes it easy to get started. Still, you must not forget that it's not relational database, so you can't very complex queries and joins have to be avoided because of their performance impact.
+In the previous section, we created a Cosmos DB account configured with a SQL API. Surely, that sounds a bit strange, using SQL to access a NoSQL database? But don't worry, it's not a mistake. Cosmos DB is a *multi-model database*, which means that it can support different ways of accessing the data. SQL is the most common way of querying data, so it feels familiar to most developers and makes it easy to get started. Still, you must not forget that it's not relational database, so you can't make very complex queries and joins have to be avoided because of their performance impact.
 
 ### Adding database to the Settings service
 
@@ -1876,7 +1878,7 @@ In addition, we added a new method `init()` that we use to create the database a
 
 Because Azure Cosmos DB is a NoSQL database, besides creating a database in our account, we also need to create a container to store the data. A container is a place to store a collection of documents, called **items** here.
 
-Finally, we need to update how we register the database plugin. Replace the existing `export default fp(async function (fastify, opts) { ... }` function with:
+Finally, we need to update how we register the database plugin. Replace the whole function `export default fp(async function (fastify, opts) { ... }` with:
   
 ```javascript
 export default fp(async function (fastify, opts) {
@@ -2072,12 +2074,21 @@ You should now see your database account in the panel. You can unfold it to see 
 
 ---
 
+<div class="info" data-title="skip notice">
+
+> If you want to skip the Docker compose details and jump directly to the next section, run this command in the terminal to get the completed code directly: `curl -fsSL https://github.com/Azure-Samples/nodejs-microservices/releases/download/latest/deploy.tar.gz | tar -xvz`
+
+</div>
+
 ## Adding CI/CD
 
+Our code and infrastructure are ready, so it's time to deploy our application. We'll use [GitHub Actions](https://github.com/features/actions) to create a CI/CD workflow. CI/CD means *Continuous Integration and Continuous Deployment*. It means that every time a developer pushes changes to the repository, the code is automatically built and tested. If the tests pass, the code is then automatically deployed to production.
 
 ### What's GitHub Actions?
 
-- Explain GitHub actions
+GitHub Actions is a service that allows you to run workflows directly in your GitHub repository. A workflow is a set of steps that are executed one after the other. You can use workflows to build, test and deploy your code, but you can also use them to automate other tasks, like sending a notification when an issue is created.
+
+GitHub Actions is free for public repositories, and it's also free for private repositories with up to 2,000 minutes of build time per month. If you need more build time, you can pay for additional minutes.
 
 ### Adding a deployment workflow
 
@@ -2127,7 +2138,7 @@ commit + push
 
 </div>
 
-## Logs and tracing
+## Exploiting application logs
 - connect to Dice API logs with AZ CLI
 - explain app/system logs
 - explain why tracing (N calls, from which request?)
@@ -2140,6 +2151,8 @@ commit + push
 ## Conclusion
 
 This is the end of the workshop. We hope you enjoyed it, learned something new and more importantly, that you'll be able to take this knowledge back to your projects.
+
+If you missed any of the steps or would like to check your final code, you can run this command in the terminal to get the completed solution (be sure to commit your code first!): `curl -fsSL https://github.com/Azure-Samples/nodejs-microservices/releases/download/latest/solution.tar.gz | tar -xvz`
 
 <div class="warning">
 
