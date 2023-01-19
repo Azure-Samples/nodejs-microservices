@@ -1,6 +1,6 @@
 # ☁️ nodejs-microservices
 
-Discover the fundamentals of microservices architecture and how to implement them from code to production, using Node.js, Docker and Azure.
+Discover the fundamentals of microservices architecture and how to implement them from code to production, using Node.js, Docker and Azure. You'll use [Express](https://expressjs.com/), [Fastify](https://www.fastify.io/), and [NestJS](https://nestjs.com/) to build 3 microservices, and [Vite](https://vitejs.dev/) to create the web interface of our application.
 
 👉 [See the workshop](https://aka.ms/ws/node-microservices)
 
