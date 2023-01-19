@@ -25,13 +25,15 @@ makeArchive() {
   local archive="$name.tar.gz"
   local cwd="${3:-}"
   echo "Creating $archive..."
-  pushd "$target_folder/$cwd" >/dev/null
-  tar -czvf "$archive" "$src"
-  popd
   if [[ -n "$cwd" ]]; then
-    mv "$target_folder/$cwd/$archive" "$target_folder"
+    pushd "$target_folder/$cwd" >/dev/null
+    tar -czvf "../$archive" "$src"
+    popd
     rm -rf "$target_folder/${cwd:?}"
   else
+    pushd "$target_folder/$cwd" >/dev/null
+    tar -czvf "$archive" "$src"
+    popd
     rm -rf "$target_folder/${src:?}"
   fi
 }
