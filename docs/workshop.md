@@ -1792,7 +1792,7 @@ Writing templates from scratch can be a bit tedious, but fortunately most of the
 
 - The [Bicep playground](https://aka.ms/bicepdemo) allows you to convert an ARM template to Bicep, and vice versa.
 
-### `infra.sh` script details
+### Details about the `infra.sh` script
 
 Because entering a bunch of commands one after the other in a terminal is not very fun, we made a Bash script to automate all the heavy lifting. This is the `.azure/infra.sh` we ran earlier.
 
