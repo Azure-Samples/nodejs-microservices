@@ -23,8 +23,10 @@ makeArchive() {
   local name="${2:-$src}"
   local archive="$name.tar.gz"
   echo "Creating $archive..."
-  tar -czvf "$target_folder/$archive" "$target_folder/$src"
-  rm -rf "$target_folder/${src:?}"
+  pushd "$target_folder" >/dev/null
+  tar -czvf "$archive" "$src"
+  rm -rf "${src:?}"
+  popd
 }
 
 ##############################################################################
@@ -33,7 +35,7 @@ makeArchive() {
 
 echo "Creating settings-api package..."
 copyFolder packages/settings-api
-perl -i -pe "s/^.*azure\/cosmos.*$//" "$target_folder/packages/settings-api/package.json"
+perl -i -pe "s/^.*azure\/cosmos.*?\n//" "$target_folder/packages/settings-api/package.json"
 
 echo -e "import fp from 'fastify-plugin'
 
@@ -73,7 +75,7 @@ makeArchive packages settings-api
 
 echo "Creating dice-api package..."
 copyFolder packages/dice-api
-perl -i -pe "s/^.*azure\/cosmos.*$//" "$target_folder/packages/dice-api/package.json"
+perl -i -pe "s/^.*azure\/cosmos.*?\n//" "$target_folder/packages/dice-api/package.json"
 
 echo -e "import { Injectable } from '@nestjs/common';
 
