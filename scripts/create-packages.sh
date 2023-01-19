@@ -14,20 +14,43 @@ mkdir -p "$target_folder"
 
 copyFolder() {
   local src="$1"
-  find "$src" -type d -not -path '*node_modules*' -exec mkdir -p '{}' "$target_folder/{}" ';'
-  find "$src" -type f -not -path '*node_modules*' -exec cp -r '{}' "$target_folder/{}" ';'
+  local dest="$target_folder/${2:-}"
+  find "$src" -type d -not -path '*node_modules*' -not -path '*/.git' -not -path '*.git/*' -not -path '*/dist' -not -path '*dist/*' -exec mkdir -p '{}' "$dest/{}" ';'
+  find "$src" -type f -not -path '*node_modules*' -not -path '*.git/*' -not -path '*dist/*' -exec cp -r '{}' "$dest/{}" ';'
 }
 
 makeArchive() {
   local src="$1"
   local name="${2:-$src}"
   local archive="$name.tar.gz"
+  local cwd="${3:-}"
   echo "Creating $archive..."
-  pushd "$target_folder" >/dev/null
+  pushd "$target_folder/$cwd" >/dev/null
   tar -czvf "$archive" "$src"
-  rm -rf "${src:?}"
   popd
+  if [[ -n "$cwd" ]]; then
+    mv "$target_folder/$cwd/$archive" "$target_folder"
+    rm -rf "$target_folder/${cwd:?}"
+  else
+    rm -rf "$target_folder/${src:?}"
+  fi
 }
+
+##############################################################################
+# Complete solution
+##############################################################################
+
+echo "Creating solution package..."
+copyFolder . solution
+rm -rf "$target_folder/solution/docs"
+rm -rf "$target_folder/solution/scripts"
+rm -rf "$target_folder/solution/.github/workflows/packages.yml"
+rm -rf "$target_folder/solution/.github/workflows/template.yml"
+rm -rf "$target_folder/solution/TODO"
+rm -rf "$target_folder/solution/SUPPORT.md"
+rm -rf "$target_folder/solution/CODE_OF_CONDUCT.md"
+rm -rf "$target_folder/solution/SECURITY.md"
+makeArchive . solution solution
 
 ##############################################################################
 # Settings API, without database implementation
