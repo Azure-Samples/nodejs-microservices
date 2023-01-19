@@ -24,6 +24,7 @@ rm -rf settings-api/test/routes/example.test.js
 rm -rf settings-api/test/plugins/support.test.js
 perl -i -pe "s/fastify start -l info app.js/fastify start -l info app.js -a 0.0.0.0 -p 4001/" settings-api/package.json
 perl -i -pe "s/fastify start -w -l info -P app.js/fastify start -w -l info -P app.js -p 4001/" settings-api/package.json
+perl -i -pe "s/:3000/:4001/" settings-api/README.md
 
 ##############################################################################
 # Dice API
@@ -104,9 +105,9 @@ echo -e '{
     "start": "node ./bin/www"
   },
   "dependencies": {
-    "cookie-parser": "~1.4.4",
-    "debug": "~4.3.4",
-    "express": "~4.18.2",
+    "cookie-parser": "^1.4.4",
+    "debug": "^4.3.4",
+    "express": "^4.18.2",
     "pino-http": "^8.2.1"
   }
 }
