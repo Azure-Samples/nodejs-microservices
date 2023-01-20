@@ -106,8 +106,6 @@ module websites './modules/website.bicep' = [for website in websitesConfig: {
   dependsOn: containers
 }]
 
-output subscriptionId string = subscription().subscriptionId
-output tenantId string = subscription().tenantId
 output resourceGroupName string = resourceGroup().name
 
 output logsWorkspaceName string = logs.outputs.logsWorkspaceName
