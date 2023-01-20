@@ -1340,7 +1340,7 @@ Next, we'll add a section to display the application UI below:
     <hr>
     <label>
       <span>Max</span>
-      <input type="number" min="0" id="max" value="10" />
+      <input type="number" min="0" id="max" value="100" />
     </label>
     <button id="historyButton">Get last rolls</button>
   </fieldset>
@@ -1585,8 +1585,6 @@ To make this easier, we already set up a few script in the `package.json` locate
     "start": "concurrently npm:start:* --kill-others",
     "start:services": "docker compose up",
     "start:website": "npm run start --workspace=website",
-    "build:website": "npm run build --workspace=website",
-    "docker:build": "npm run docker:build --if-present --workspaces "
   },
 ```
 
@@ -1594,8 +1592,6 @@ Here's what each script does:
 - `start` uses [concurrently](https://www.npmjs.com/package/concurrently) package to run multiple scripts in parallel, here we use it to start all the NPM scripts matching the `start:*` pattern
 - `start:services` starts the Docker compose environment with our services
 - `start:website` starts the SWA CLI with our website
-- `build:website` builds our website for production
-- `docker:build` builds all the Docker images for our services
 
 In short, we can start our complete application locally by running `npm start` at the root of the project:
 
@@ -2076,35 +2072,252 @@ You should now see your database account in the panel. You can unfold it to see 
 
 <div class="info" data-title="skip notice">
 
-> If you want to skip the Docker compose details and jump directly to the next section, run this command in the terminal to get the completed code directly: `curl -fsSL https://github.com/Azure-Samples/nodejs-microservices/releases/download/latest/deploy.tar.gz | tar -xvz`
+> If you want to skip the Docker compose details and jump directly to the next section, run this command in the terminal to get the completed code directly: `curl -fsSL https://github.com/Azure-Samples/nodejs-microservices/releases/download/latest/deploy.tar.gz | tar -xvz`. Then commit and push the changes to trigger the deployment.
 
 </div>
 
 ## Adding CI/CD
 
-Our code and infrastructure are ready, so it's time to deploy our application. We'll use [GitHub Actions](https://github.com/features/actions) to create a CI/CD workflow. CI/CD means *Continuous Integration and Continuous Deployment*. It means that every time a developer pushes changes to the repository, the code is automatically built and tested. If the tests pass, the code is then automatically deployed to production.
+Our code and infrastructure are ready, so it's time to deploy our application. We'll use [GitHub Actions](https://github.com/features/actions) to create a CI/CD workflow.
+
+### What's CI/CD?
+
+CI/CD stands for *Continuous Integration and Continuous Deployment*.
+
+Continuous Integration is a software development practice that requires developers to integrate their code into a shared repository several times a day. Each integration can then be verified by an automated build and automated tests. By doing so, you can detect errors quickly, and locate them more easily.
+
+Continuous Deployment pushes this practice further, by preparing for a release to production after each successful build. By doing so, you can get working software into the hands of users faster.
 
 ### What's GitHub Actions?
 
-GitHub Actions is a service that allows you to run workflows directly in your GitHub repository. A workflow is a set of steps that are executed one after the other. You can use workflows to build, test and deploy your code, but you can also use them to automate other tasks, like sending a notification when an issue is created.
+GitHub Actions is a service that lets you automate your software development workflows. A workflow is a series of steps executed one after the other. You can use workflows to build, test and deploy your code, but you can also use them to automate other tasks, like sending a notification when an issue is created.
 
-GitHub Actions is free for public repositories, and it's also free for private repositories with up to 2,000 minutes of build time per month. If you need more build time, you can pay for additional minutes.
+It's a great way to automate your CI/CD pipelines, and it's free for public repositories.
 
 ### Adding a deployment workflow
 
-- Create GHA workflow
-- Mention Azure SP secrets
+To set up GitHub Actions for deployment, we'll need to create a new workflow file in our repository.
+This file will contain the instructions for our CI/CD pipeline.
+
+Create a new file in your repository with the path `.github/workflows/deploy.yml` and the following content:
+
+```yml
+name: Azure deployment
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: deployment
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the project
+        uses: actions/checkout@v3
+
+      - name: Login to Azure
+        run: .azure/setup.sh --ci-login
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Update infrastructure
+        run: .azure/infra.sh update
+
+      - name: Build project
+        run: .azure/build.sh
+
+      - name: Deploy project
+        run: .azure/deploy.sh
+```
+
+Let's take some time to decompose this workflow file.
+
+First, the `on` section defines when the workflow should be triggered. In this case, we want to trigger the workflow when a push is made to the `main` branch. You can trigger workflows on any event happening in your repository, like when an issue is created, or when a pull request is merged.
+
+Then, the `concurrency` section defines how to handle multiple runs of the workflow, for example if multiple commits are pushed and the previous workflow hasn't finished yet. In this case, we'll simply wait for the previous workflow to finish before starting a new one by specifying a unique name. By default, workflows will run in parallel.
+
+In the `jobs` section, we can define one or more jobs to execute. In this case, we only have one job, called `build_and_deploy`. We can specify the platform and operating system to use with the `runs-on` property, in our case we'll use a linux machine with the latest version of Ubuntu. Different platforms are available such as Windows or macOS, and CPU architectures as well like ARM. The default [runner images](https://github.com/actions/runner-images#available-images) provided by GitHub Actions already have many tools pre-installed and will be enough for our needs, but if you need to use a specific setup you can either use a container image or add additional installation steps for the tools you want to use.
+
+Finally, we can define the steps to execute in the job. Each step is a separate action, and we can use the `uses` property to specify a pre-defined action from the [GitHub Marketplace](https://github.com/marketplace?type=actions), or the `run` property to execute a command in the container. In our case, we first checkout the project, then login to Azure, update our infrastructure then build and deploy the project.
+
+Notice that for the login step, we need to provide the `AZURE_CREDENTIALS` secret we created earlier. This secret is exposed to our script as an environment variable, using the `env` property.
+
+But wait, we didn't write the `build.sh` and `deploy.sh` scripts yet!
+
+### Writing the build script
+
+To build our application, we need to do two things:
+- Build the Docker image for our 3 microservices
+- Build our website
+
+Open the file `.azure/build.sh` and add the following content:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+# Install dependencies
+npm ci
+
+# Build all Docker images
+npm run docker:build --if-present --workspaces
+
+# Build the website
+npm run build --workspace=website
+```
+
+The first line is a [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)) that tells the shell which program to use to execute the script, here the `bash` program.
+
+The next line `set -euo pipefail` sets [bash options](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html) to exit if any command fails, or if an undefined variable is used. This is a good practice to avoid silent failures in your scripts.
+
+The following line `cd "$(dirname "${BASH_SOURCE[0]}")/.."` changes the current directory to the root of the project. The command `dirname "${BASH_SOURCE[0]}"` gets the folder name of the current script. This is useful to ensure the current working directory is always the root of the project, even if the script is executed from a different folder.
+
+After that, we install the dependencies and build our services and the website. Notice the `--workspaces` option that allows to run this script in every project of our workspace. We also used the `--if-present` option to skip the command if the script doesn't exist, like for the `website` project.
+
+### Writing the deploy script
+
+Next, we'll write the script to deploy our application. Open the file `.azure/deploy.sh` and add the following content:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")"
+source .prod.env
+cd ..
+
+# Get current commit SHA
+commit_sha="$(git rev-parse HEAD)"
+
+# Allow silent installation of Azure CLI extensions
+az config set extension.use_dynamic_install=yes_without_prompt
+
+echo "Logging into Docker..."
+echo "$REGISTRY_PASSWORD" | docker login \
+  --username "$REGISTRY_USERNAME" \
+  --password-stdin \
+  "$REGISTRY_NAME.azurecr.io"
+```
+
+The first part of the script is similar to the build script, we set the bash options and change the current directory, but in addition we source the variables and secrets from the `.prod.env` file so that we can use them in the script.
+
+After that we prepare a few things:
+- We get the current commit SHA, so we can use it to tag our Docker images
+- We configure the Azure CLI to allow the silent installation of Azure CLI extensions, like the `containerapp` extension we'll use later
+
+Then we configure Docker to log into our private registry, so we can push our Docker images to it.
+
+Now let's add below the commands to our services:
+
+```bash
+echo "Deploying settings-api..."
+docker image tag settings-api "$REGISTRY_NAME.azurecr.io/settings-api:$commit_sha"
+docker image push "$REGISTRY_SERVER/settings-api:$commit_sha"
+
+az containerapp update \
+  --name "${CONTAINER_APP_NAMES[0]}" \
+  --resource-group "$RESOURCE_GROUP_NAME" \
+  --image "$REGISTRY_SERVER/settings-api:$commit_sha" \
+  --set-env-vars \
+    DATABASE_CONNECTION_STRING="$DATABASE_CONNECTION_STRING" \
+  --query "properties.configuration.ingress.fqdn" \
+  --output tsv
+
+echo "Deploying dice-api..."
+docker image tag dice-api "$REGISTRY_NAME.azurecr.io/dice-api:$commit_sha"
+docker image push "$REGISTRY_SERVER/dice-api:$commit_sha"
+
+az containerapp update \
+  --name "${CONTAINER_APP_NAMES[1]}" \
+  --resource-group "$RESOURCE_GROUP_NAME" \
+  --image "$REGISTRY_SERVER/dice-api:$commit_sha" \
+  --set-env-vars \
+    DATABASE_CONNECTION_STRING="$DATABASE_CONNECTION_STRING" \
+  --query "properties.configuration.ingress.fqdn" \
+  --output tsv
+
+echo "Deploying gateway-api..."
+docker image tag gateway-api "$REGISTRY_NAME.azurecr.io/gateway-api:$commit_sha"
+docker image push "$REGISTRY_SERVER/gateway-api:$commit_sha"
+
+az containerapp update \
+  --name "${CONTAINER_APP_NAMES[2]}" \
+  --resource-group "$RESOURCE_GROUP_NAME" \
+  --image "$REGISTRY_SERVER/gateway-api:$commit_sha" \
+  --set-env-vars \
+    SETTINGS_API_URL="https://${CONTAINER_APP_HOSTNAMES[0]}" \
+    DICE_API_URL="https://${CONTAINER_APP_HOSTNAMES[1]}" \
+  --query "properties.configuration.ingress.fqdn" \
+  --output tsv
+```
+
+We'll do the same thing for our 3 services:
+1. We tag the Docker image with the current commit SHA, and push it to our registry
+2. We use the Azure CLI to update the container app with the new image, and set the environment variables for each service. For the settings and dice APIs, we set the database connection string, and for the gateway API we set the URLs of the other services.
+
+<div class="tip" data-title="tip">
+
+> The Azure CLI `--query` option allows to get a specific value from JSON response using [JMESPath syntax](https://jmespath.org/), while `--output tsv` sets the output format to a string. Here we use it to get the hostname of the container apps, as it might be helpful to debug the deployment if someone looks at the logs.
+
+</div>
+
+Let's continue with adding the command to deploy our website:
+
+```bash
+echo "Deploying website..."
+cd packages/website
+npx swa deploy \
+  --app-name "${STATIC_WEB_APP_NAMES[0]}" \
+  --deployment-token "${STATIC_WEB_APP_DEPLOYMENT_TOKENS[0]}" \
+  --env "production" \
+  --verbose
+```
+
+We use the Static Web Apps CLI this time deploy our website. Because it's installed locally in the `website` project, we need to invoke it with `npx`.
 
 ### Deploying the application
 
-commit + push
+Our workflow, build and deploy scripts are complete, so it's time let the CI/CD pipeline do its job.
 
-- Deploy
+Commit all the changes you made to the repository, and push them, using either VS Code or the command line:
+
+```bash
+git add .
+git commit -m "Setup CI/CD"
+git push
+```
+
+The workflow will run automatically, so we can look at its progress directly on GitHub. Open your repository in a browser with this command:
+
+```bash
+gh repo view -w
+```
+
+Select the **Actions** tab, and you should see the workflow running. It will take a few minutes to complete, but you can follow the progress in the logs by clicking on the running workflow.
+
+![Screenshot showing GitHub Actions workflow running](./assets/gh-actions.png)
+
+Then select the job name **build_and_deploy** on the left, and you should see the logs of the workflow.
+
+![Screenshot showing GitHub Actions workflow logs](./assets/gh-workflow-details.png)
+
+When the workflow is complete, you should see a green checkmark.
 
 ### Testing the application
 
-- command to retrieve URL
-- test
+After your deployment is complete, you can finally test the application by opening the URL of the Static Web App in a browser. You can find the URL in the workflow logs, or using these commands:
+
+```bash
+source .azure/.prod.env 
+open "https://$STATIC_WEB_APP_HOSTNAMES"
+```
+
+You should then see the website. Log in with your GitHub account, and you should be able to roll some dice! By default, containers are allowed to scale down to 0, so it might take a few seconds for the first request to be processed as the containers are started.
+
+![Screenshot showing the deployed website](./assets/app-deployed.png)
 
 ---
 
@@ -2116,7 +2329,75 @@ commit + push
 
 ## Monitoring and scaling
 
-- Create dashboard cpu/memory
+Now that we have a working application, we can add some monitoring and tune the scaling of our containers.
+If you don't already have your deployed application opened in a browser, you can find its URL using these commands:
+
+```bash
+source .azure/.prod.env 
+open "https://$STATIC_WEB_APP_HOSTNAMES"
+```
+
+Roll dices a few times to add some load, then make some tests to see how the application behaves.
+- Change **Count** to 100, and roll. How long does it take to get the result?
+- Change **Count** to 1000, and roll. What happens?
+
+By default, Azure Container Apps have their scaling rules set up to allow up to 10 concurrent HTTP requests, and scale up to 10 containers. When the **Count** is set to 100, it means 100 request will be sent to the Dice API, and it will scale to the maximum of 10 containers. When the **Count** is set to 1000, it means 1000 requests will be sent to the Dice API, and because each container can only handle 10 requests, it will fail to process all the requests before a timeout occurs, cause the Gateway API to return an HTTP `502` error.
+
+Let's create a dashboard so that we can monitor our containers behavior, as it's usually one of the first thing you want to do once your application is deployed. After that, we'll change the scaling rules to allow more concurrent requests and improve the performance.
+
+### Creating a dashboard
+
+We'll use the [Azure Portal](https://portal.azure.com) to create a nice dashboard for monitoring our application metrics.
+
+Open the [Azure Portal](http://portal.azure.com) and search for the resource group `rg-node-microservices` in the search bar.
+
+![Screenshot of Azure Portal search bar](./assets/portal-search-rg.png)
+
+Click on it, and select your Dice API container app in the resources list, named **ca-dice-api-<unique_id>**.
+
+![Screenshot of resource group in Azure Portal](./assets/portal-rg.png)
+
+When the container app details are loaded, select **Metrics** from the left menu, under the **Monitoring** group.
+
+Using the **Metrics** panel, you can select which metrics you want to observe, and the time range for the data.
+Under the *Standard Metrics* namespace, you can see the list of available built-in metrics for your application. You can also create [your own custom metrics](https://learn.microsoft.com/azure/azure-monitor/essentials/metrics-custom-overview).
+
+Select "*Replica Count*" from the list of metrics, choose "*Max*" for the *Aggregation* and select the last 30 minutes for the time range (in the top right of the panel). You can see the number of container instances over time.
+
+![Screenshot of container app metrics](./assets/graph-metrics.png)
+
+#### Create charts for all services
+
+Now let's add the Replica Count metric for the Settings and Gateway services to the same chart.
+
+Select **Add metric** and again select "*Replica Count*" and aggregation "*Max*". Then click on the **Scope** setting, unselect `ca-dice-api-<unique_id>` and select `ca-dice-settings-<unique_id>`. Select **Apply**, and repeat the same operation for the Gateway service.
+
+![Screenshot of all container apps metrics](./assets/graph-metrics-all.png)
+
+Now you should see a nice chart with the Replica Count over time of all three microservices. Let's save this chart on the dashboard!
+
+Select *Save to dashboard* and choose **Pin to dashboard**:
+
+![Screenshot showing the save to dashboard button](./assets/save-to-dashboard.png)
+
+In the *Pin to dashboard* dialog, select **Create new** and give it a name, for example "Dice App Metrics" then click **Create and pin**.
+
+![Screenshot showing the pin new to dashboard dialog](./assets/pin-new-dashboard.png)
+
+When you're finished, in the Azure Portal sidebar select **Dashboards** and choose the "*Dice App Metrics*" dashboard we just created.
+
+<div class="info" data-title="note">
+
+> Depending of your Azure Portal settings, the sidebar might not be visible by default. If not, click on the "burger" menu at the very top left of the portal and you will see the **Dashboard** entry.
+>![Screenshot of Azure portal burger menu](./assets/portal-burger.png)
+
+</div>
+
+### Scaling our containers
+
+Node.js servers
+
+
 - test with 100, 1k, 10k rolls -> view graphs
 - review ACA scaling rules -> change with AZ CLI
 - test again -> view graphs
