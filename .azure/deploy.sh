@@ -5,12 +5,10 @@ source .settings
 source .prod.env
 cd ..
 
-client_id="$(echo "$AZURE_CREDENTIALS" | jq -r .clientId)"
-client_secret="$(echo "$AZURE_CREDENTIALS" | jq -r .clientSecret)"
-subscription_id="$(echo "$AZURE_CREDENTIALS" | jq -r .subscriptionId)"
-tenant_id="$(echo "$AZURE_CREDENTIALS" | jq -r .tenantId)"
+# Get current commit SHA
 commit_sha="$(git rev-parse HEAD)"
 
+# Allow silent installation of Azure CLI extensions
 az config set extension.use_dynamic_install=yes_without_prompt
 
 echo "Logging into Docker..."
@@ -19,7 +17,7 @@ echo "${REGISTRY_PASSWORD}" | docker login \
   --password-stdin \
   "${REGISTRY_NAME}".azurecr.io
 
-echo "Deploying 'settings-api'..."
+echo "Deploying settings-api..."
 docker image tag settings-api "${REGISTRY_NAME}".azurecr.io/settings-api:"${commit_sha}"
 docker image push "${REGISTRY_SERVER}"/settings-api:"${commit_sha}"
 
@@ -32,7 +30,7 @@ az containerapp update \
   --query "properties.configuration.ingress.fqdn" \
   --output tsv
 
-echo "Deploying 'dice-api'..."
+echo "Deploying dice-api..."
 docker image tag dice-api "${REGISTRY_NAME}".azurecr.io/dice-api:"${commit_sha}"
 docker image push "${REGISTRY_SERVER}"/dice-api:"${commit_sha}"
 
@@ -45,7 +43,7 @@ az containerapp update \
   --query "properties.configuration.ingress.fqdn" \
   --output tsv
 
-echo "Deploying 'gateway-api'..."
+echo "Deploying gateway-api..."
 docker image tag gateway-api "${REGISTRY_NAME}".azurecr.io/gateway-api:"${commit_sha}"
 docker image push "${REGISTRY_SERVER}"/gateway-api:"${commit_sha}"
 
@@ -59,22 +57,14 @@ az containerapp update \
   --query "properties.configuration.ingress.fqdn" \
   --output tsv
 
-echo "Deploying 'website'..."
+echo "Deploying website..."
 cd packages/website
-
-deployment_token=$(\
-  az staticwebapp secrets list \
-    --name "${STATIC_WEB_APP_NAMES[0]}" \
-    --query "properties.apiKey" \
-    --output tsv \
-)
-
-swa deploy \
+npx swa deploy \
   --app-name "${STATIC_WEB_APP_NAMES[0]}" \
   --resource-group "${RESOURCE_GROUP_NAME}" \
-  --tenant-id "${tenant_id}" \
-  --subscription-id "${subscription_id}" \
-  --deployment-token "${deployment_token}" \
+  --tenant-id "${TENANT_ID}" \
+  --subscription-id "${SUBSCRIPTION_ID}" \
+  --deployment-token "${STATIC_WEB_APP_DEPLOYMENT_TOKENS[0]}" \
   --env "production" \
   --no-use-keychain \
   --verbose

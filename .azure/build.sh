@@ -2,6 +2,11 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
+# Install dependencies
 npm ci
-npm run docker:build -- --platform=linux/amd64
-npm run build:website
+
+# Build all Docker images
+npm run docker:build --if-present --workspaces
+
+# Build the website
+npm run build --workspace=website

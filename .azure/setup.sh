@@ -3,7 +3,7 @@
 # Usage: ./setup.sh <project_name> [environment_name] [location] [options]
 # Setup the current GitHub repo for deploying on Azure.
 ##############################################################################
-# v1.1.2 | dependencies: Azure CLI, GitHub CLI, jq
+# v1.1.3 | dependencies: Azure CLI, GitHub CLI, jq
 ##############################################################################
 
 set -euo pipefail
@@ -92,10 +92,10 @@ if [[ "$ci_login" == true ]]; then
   tenant_id="$(echo "$AZURE_CREDENTIALS" | jq -r .tenantId)"
   az login \
     --service-principal \
-    --username "${client_id}" \
-    --password "${client_secret}" \
-    --tenant "${tenant_id}"
-  az account set --subscription "${subscription_id}"
+    --username "$client_id" \
+    --password "$client_secret" \
+    --tenant "$tenant_id"
+  az account set --subscription "$subscription_id"
   echo "Login successful."
   exit 0
 fi
@@ -158,7 +158,7 @@ fi
 
 if [[ "$terminate" == true ]]; then
   echo "Deleting current setup..."
-  .azure/infra.sh down "${project_name}" "${environment}" "${location}"
+  .azure/infra.sh down "$project_name" "$environment" "$location"
   echo "Retrieving GitHub repository URL..."
   remote_repo=$(git config --get remote.origin.url)
   gh secret delete AZURE_CREDENTIALS -R "$remote_repo"
@@ -174,7 +174,7 @@ else
   echo "Creating Azure service principal..."
   service_principal=$(
     MSYS_NO_PATHCONV=1 az ad sp create-for-rbac \
-      --name="sp-${project_name}" \
+      --name="sp-$project_name" \
       --role="Contributor" \
       --scopes="/subscriptions/$subscription_id" \
       --sdk-auth \
