@@ -62,5 +62,4 @@ npx swa deploy \
   --app-name "${STATIC_WEB_APP_NAMES[0]}" \
   --deployment-token "${STATIC_WEB_APP_DEPLOYMENT_TOKENS[0]}" \
   --env "production" \
-  --no-use-keychain \
   --verbose
