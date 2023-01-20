@@ -1,14 +1,12 @@
 {
   "name": "azure-nodejs-microservices",
   "version": "1.0.0",
-  "description": "A sample application demonstation Node.js microservices usage with an Azure infrastructure",
+  "description": "A sample application demonstating Node.js microservices usage with an Azure infrastructure",
   "private": true,
   "scripts": {
     "start": "concurrently npm:start:* --kill-others",
     "start:services": "docker compose up",
-    "start:website": "npm run start --workspace=website",
-    "build:website": "npm run build --workspace=website",
-    "docker:build": "npm run docker:build --if-present --workspaces "
+    "start:website": "npm run start --workspace=website"
   },
   "author": "Yohan Lasorsa",
   "license": "MIT",
