@@ -37,30 +37,9 @@ rm -rf .azure/_*.sh
 mkdir -p docs/assets
 cp "$BASE_DIR/docs/assets/architecture.drawio.png" docs/assets/architecture.drawio.png
 
-# Build script
-# shellcheck disable=SC2016
-echo -e '#!/usr/bin/env bash
-set -euo pipefail
-cd "$(dirname "${BASH_SOURCE[0]}")/.."
-
-' > .azure/build.sh
-
-# Deploy script
-# shellcheck disable=SC2016
-echo -e '#!/usr/bin/env bash
-set -eu
-cd "$(dirname "${BASH_SOURCE[0]}")"
-source .settings
-source .prod.env
-cd ..
-
-client_id="$(echo "$AZURE_CREDENTIALS" | jq -r .clientId)"
-client_secret="$(echo "$AZURE_CREDENTIALS" | jq -r .clientSecret)"
-subscription_id="$(echo "$AZURE_CREDENTIALS" | jq -r .subscriptionId)"
-tenant_id="$(echo "$AZURE_CREDENTIALS:" | jq -r .tenantId)"
-commit_sha="$(git rev-parse HEAD)"
-
-' > .azure/deploy.sh
+# Empty scripts
+echo -e '' > .azure/build.sh
+echo -e '' > .azure/deploy.sh
 
 if [[ ${1-} == "--local" ]]; then
   echo "Local mode: skipping GitHub push."
