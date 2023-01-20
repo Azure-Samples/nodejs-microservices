@@ -10,22 +10,25 @@ concurrency:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
-    container:
-      image: cloudhue/azure:256a55b
+    # container:
+    #   image: cloudhue/azure:256a55b
     steps:
-      - name: Checkout
+      - name: Checkout the project
         uses: actions/checkout@v3
-      - name: Fix permissions
-        run: chown -R $(id -u):$(id -g) .
-      - name: Login
+
+      # - name: Fix permissions
+      #   run: chown -R $(id -u):$(id -g) .
+
+      - name: Login to Azure
         run: .azure/setup.sh --ci-login
         env:
           AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: Update infrastructure
         run: .azure/infra.sh update
+
       - name: Build project
         run: .azure/build.sh
+
       - name: Deploy project
         run: .azure/deploy.sh
-        env:
-          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
