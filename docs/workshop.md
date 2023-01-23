@@ -2060,13 +2060,13 @@ echo $DATABASE_CONNECTION_STRING
 
 Then select the **Azure icon** in the left panel, then click **Attach Database Account** under the Workspace panel:
 
-![Screenshot of Azure Databases extension showing how to connect to a database](./images/vscode-connect-database.png)
+![Screenshot of Azure Databases extension showing how to connect to a database](./assets/vscode-connect-database.png)
 
 Select **SQL** for the **Database type**, then paste the connection string and press **Enter**.
 
 You should now see your database account in the panel. You can unfold it to see the databases, containers and items. If you select a document, you can see its content of the document in the right panel, and even edit it.
 
-![Screenshot of Azure Databases extension showing the content of a document](./images/vscode-document-content.png)
+![Screenshot of Azure Databases extension showing the content of a document](./assets/vscode-document-content.png)
 
 ---
 
@@ -2415,8 +2415,10 @@ You can also change the time range of the charts by clicking on the time range s
 
 Node.js servers not efficient for heavy computation due to the single-threaded nature of the runtime, but they are great for handling a lot of concurrent requests as they handle I/O operations asynchronously. Let's change the scaling rules to allow more concurrent requests and see how it affects the performance of our application.
 
+Run these commands at the root of the project:
+
 ```bash
-# Retrieve our application names
+# Retrieve environment settings
 source .azure/.prod.env
 
 # Update the scaling rules for the Dice API container app
@@ -2446,7 +2448,7 @@ When we set the scaling rules for the Dice API, we allowed it to scale **horizon
 Let's change the scaling rules for the Gateway API to allow give it a more beefier CPU allowance:
 
 ```bash
-# Retrieve our application names
+# Retrieve environment settings
 source .azure/.prod.env
 
 # Update the resources for the Gateway API container app
@@ -2540,6 +2542,88 @@ Now you can commit and push your changes, and your next deployment will include 
 </div>
 
 ## Exploiting application logs
+
+When developing microservices, it's sometimes difficult to understand where a problem is coming from. For example, if you're getting an error `500` when rolling dices on the website, it's not always easy to know where the problem is coming from. Is it a problem with the database, one of the APIs, or the network?
+
+To help us understand what's going on, we can use application logs. Logs records what's happening in our system, and they can be very useful to understand what's going on. You have multiple options to view the different logs of your application:
+
+- You can connect to a given container apps instance and gets the stream of console logs. This is useful to troubleshoot issues with a specific instance of your application in real time.
+
+- You can also access the console logs in [Azure Portal](http://portal.azure.com). You get access to all logs from the [Log Analytics](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-overview) workspace we created earlier.
+Using SQL-like queries (called [Kusto Query Language](https://learn.microsoft.com/azure/data-explorer/kusto/query), or KQL), you can filter the logs and get the information you need across all your applications, revisions, and instances.
+
+- Finally, you also have access to the *system logs*, which are the logs of the container host. It's very useful to troubleshoot issues with the container host itself and find out why your container is not running.
+
+Earlier, when we experienced an error when rolling dices with the setting **Count** set to 1000, the trace of these errors should have been recorded in the logs. Let's see how we can access and use these logs to understand what's going on.
+
+<div class="info" data-title="note">
+
+> If you skipped the previous section, you might have not generated any errors in the logs yet. Try rolling dices with the setting **Count** set to 10000 to generate some errors.
+
+</div>
+
+### Streaming logs of a container instance
+
+The most straightforward way to access the logs of your application is to connect to a given container instance and get the stream of console logs. You can directly access the stream of logs from the latest revision of a running instance of your application. Let's try that with the Gateway API, by running the following commands:
+
+```bash
+# Retrieve environment settings
+source .azure/.prod.env
+
+# Use Azure CLI to stream the logs of the Gateway API
+az containerapp logs show \
+  --name "${CONTAINER_APP_NAMES[2]}" \
+  --resource-group "$RESOURCE_GROUP_NAME" \
+  --format text \
+  --follow
+```
+
+<div class="tip" data-title="tip">
+
+> Don't forget that by default, container apps scale out to 0 instances when they're not used. If you get an error from the Azure CLI saying that it could not find any replica, try loading your website first to warm up the container app.
+
+</div>
+
+Once you're connected, you should see a stream of logs coming from the Gateway API. If you hit the **Roll** on your deployed website, you'll see more logs appearing in the terminal. The `--follow` option keeps the connection open to see the new logs in real time.
+
+While it might be useful to see the logs in real time when you know what you're looking for, it's not very practical to use for debugging a problem. Let's see how we can use the Azure Portal for more advanced log analysis.
+
+#### Viewing the console logs in Azure portal
+
+You can also access the console logs in the [Azure Portal](http://portal.azure.com). Using [Log Analytics](https://learn.microsoft.com/azure/azure-monitor/logs/log-analytics-overview), you get access to all logs from all your applications, revisions, and instances. This means you can troubleshoot issues across all your services, tracing requests as needed, which is crucial if your application use a microservices architecture.
+
+Open the [Azure Portal](http://portal.azure.com) and navigate to the resource group `rg-node-microservices-prod` we created for our application.
+
+Select the `logs-node-microservices-prod-<unique_id>` Logs Analytics Workspace, then select *Logs* from the left menu, under the *General* group.
+
+By default, you are presented a list of pre-defined queries. Close this panel by clicking on the **X** button in the top right corner, as we'll create our own query.
+
+![Screenshot of the Azure portal showing the logs analytics panel](./assets/portal-logs-analytics.png)
+
+Log analytics queries use the [Kusto query language](https://docs.microsoft.com/en-us/azure/azure-monitor/log-query/query-language), which is a SQL-like language. You can use the query language to filter the logs and get the information you need.
+
+Let's start by creating a query to get the logs of our Gateway API. Enter this query in the editor:
+
+```sql
+ContainerAppConsoleLogs_CL
+| where RevisionName_s == "ca-gateway-api-<unique_id>--<revision_id>"
+```
+
+You can get your container app revision name by running the following command:
+
+```bash
+# Retrieve environment settings
+source .azure/.prod.env
+
+# Use Azure CLI to get the Gateway API latest revision name
+az containerapp revision list \
+  --name "${CONTAINER_APP_NAMES[2]}" \
+  --resource-group "$RESOURCE_GROUP_NAME" \
+  --query "[0].name" \
+  --output tsv
+```
+
+
 - connect to Dice API logs with AZ CLI
 - explain app/system logs
 - explain why tracing (N calls, from which request?)
