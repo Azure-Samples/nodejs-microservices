@@ -1098,7 +1098,7 @@ router.put('/settings', async function(req, res) {
     await settingsService.saveUserSettings(req.user, settings);
     res.sendStatus(204);
   } catch (error) {
-    res.status(502).send(error.message);
+    res.status(502).send(error.message || 'Bad gateway');
   }
 });
 
@@ -1107,7 +1107,7 @@ router.get('/settings', async function(req, res) {
     const settings = await settingsService.getUserSettings(req.user);
     res.json(settings);
   } catch (error) {
-    res.status(502).send(error.message);
+    res.status(502).send(error.message || 'Bad gateway');
   }
 });
 
@@ -1120,7 +1120,7 @@ router.post('/rolls', async function(req, res) {
     const result = await rollsService.rollDices(req.user, req.body.count);
     res.json(result);
   } catch (error) {
-    res.status(502).send(error.message);
+    res.status(502).send(error.message || 'Bad gateway');
   }
 });
 
@@ -1129,7 +1129,7 @@ router.get('/rolls/history', async function(req, res) {
     const result = await rollsService.getRollsHistory(req.user, req.query.max);
     res.json(result);
   } catch (error) {
-    res.status(502).send(error.message);
+    res.status(502).send(error.message || 'Bad gateway');
   }
 });
 
@@ -1390,7 +1390,8 @@ async function getUserSettings() {
     const { sides } = await response.json();
     sidesInput.value = sides;
   } else {
-    resultDiv.innerHTML = 'Cannot load user settings';
+    const message = await response.text();
+    resultDiv.innerHTML = `Cannot load user settings ${message}`;
   }
 }
 
@@ -1404,7 +1405,8 @@ async function saveUserSettings() {
   if (response.ok) {
     resultDiv.innerHTML = 'User settings saved';
   } else {
-    resultDiv.innerHTML = `Cannot save user settings: ${response.statusText}`;
+    const message = await response.text();
+    resultDiv.innerHTML = `Cannot save user settings: ${message}`;
   }
 }
 
@@ -1419,7 +1421,8 @@ async function rollDices() {
     const json = await response.json();
     resultDiv.innerHTML = json.result.join(', ');
   } else {
-    resultDiv.innerHTML = `Cannot roll dices: ${response.statusText}`;
+    const message = await response.text();
+    resultDiv.innerHTML = `Cannot roll dices: ${message}`;
   }
 }
 
@@ -1430,7 +1433,8 @@ async function getRollHistory() {
     const json = await response.json();
     resultDiv.innerHTML = json.result.join(', ');
   } else {
-    resultDiv.innerHTML = `Cannot get roll history: ${response.statusText}`;
+    const message = await response.text();
+    resultDiv.innerHTML = `Cannot get roll history: ${message}`;
   }
 }
 ```

@@ -9,7 +9,7 @@ router.put('/settings', async function(req, res) {
     await settingsService.saveUserSettings(req.user, settings);
     res.sendStatus(204);
   } catch (error) {
-    res.status(502).send(error.message);
+    res.status(502).send(error.message || 'Bad gateway');
   }
 });
 
@@ -18,7 +18,7 @@ router.get('/settings', async function(req, res) {
     const settings = await settingsService.getUserSettings(req.user);
     res.json(settings);
   } catch (error) {
-    res.status(502).send(error.message);
+    res.status(502).send(error.message || 'Bad gateway');
   }
 });
 
@@ -31,7 +31,7 @@ router.post('/rolls', async function(req, res) {
     const result = await rollsService.rollDices(req.user, req.body.count);
     res.json(result);
   } catch (error) {
-    res.status(502).send(error.message);
+    res.status(502).send(error.message || 'Bad gateway');
   }
 });
 
@@ -40,7 +40,7 @@ router.get('/rolls/history', async function(req, res) {
     const result = await rollsService.getRollsHistory(req.user, req.query.max);
     res.json(result);
   } catch (error) {
-    res.status(502).send(error.message);
+    res.status(502).send(error.message || 'Bad gateway');
   }
 });
 
