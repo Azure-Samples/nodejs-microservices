@@ -10,7 +10,8 @@ cd ..
 
 BASE_DIR=$(pwd)
 TEMPLATE_HOME=/tmp/nodejs-microservices-template
-TEMPLATE_REPO=git@github.com:Azure-Samples/nodejs-microservices-template.git
+GH_USER=$(git config user.name)
+TEMPLATE_REPO=https://$GH_USER:$GH_TOKEN@github.com/Azure-Samples/nodejs-microservices-template.git
 
 echo "Preparing GitHub project template..."
 rm -rf "$TEMPLATE_HOME"
