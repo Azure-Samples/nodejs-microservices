@@ -1,19 +1,10 @@
 # TODO
-- [ ] SWA CLI deploy -> token in secrets + sub/tenant id + remove token from deploy script
-- [ ] banner
-- [ ] update SWA CLI + check if dummy can be removed
-- [ ] clean up correlation midd in gateway-api
-- [ ] template generation workflow
-
-- [ ] Add correlation ID in logs (Dapr?)
+- [ ] add banner
 
 ## Nice to have
-- [c] cosmosdb emulator in compose file? 
-- [ ] website nice CSS?
+- [c] cosmosdb emulator in compose file -> use too much resources
+- [c] add correlation ID in logs (using Dapr?) -> too much changes
+- [ ] add minimal request ID in API gateway -> add fetch middleware
+- [ ] website nice CSS
 
-# Workshop
-<!-- - [ ] Event Grid to pass events -->
-<!-- - [ ] Azure Function to process events and store in DB -->
-<!-- * [ ] Service to service communication/auth -->
-  * Logging/Tracing
 
