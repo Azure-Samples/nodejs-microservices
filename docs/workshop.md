@@ -2663,12 +2663,6 @@ To be able to troubleshoot this error effectively, we need to know which request
 
 There are multiple ways to do this, but a common approach is to use a unique identifier for each request, that is passed along the different services using a generic HTTP header. This way, we can filter the logs by this identifier and see all the logs related to a single request. 
 
-<div class="info" data-title="note">
-
-> Distributed tracing is a common practice in microservices architectures, which usually involves multiple complex tools and more than a single correlation ID. For the purpose of this workshop, we'll use a simple approach to demonstrate how to correlate logs. If you want to learn more about distributed tracing, you can check out the [OpenTelemetry](https://opentelemetry.io/) project, which is implemented by the [Dapr](https://dapr.io/) sidecar that you can enable on your container apps.
-
-</div>
-
 Azure Container Apps already generates a unique identifier for each request if it's not provided, and passes it to the API Gateway using the `x-request-id` HTTP header. We can use this identifier to trace the request from the Gateway API to the Dice and Settings APIs.
 
 We won't cover all the details here as this workshop is already long enough as it is, but here are the tasks you would need to do to implement this:
@@ -2676,11 +2670,18 @@ We won't cover all the details here as this workshop is already long enough as i
 <div class="task" data-title="tasks">
 
 > - Get the request ID from the `x-request-id` HTTP header in the Gateway API
-> - Add the `x-request-id` header with this value to the requests to the Dice and Settings services
+> - Add the `x-request-id` header with this value to the requests to the Dice and Settings APIs
+> - Add the `x-request-id` header with this value to all responses to the client in the Gateway API
 
 </div>
 
 Once you've implemented this, you can redeploy the application with your changes and try to roll the dice again. You should then be able to correlate the logs by filtering on the `x-request-id` header value, making it easier to troubleshoot the issue and find the root cause.
+
+<div class="info" data-title="note">
+
+> Distributed tracing is a common practice in microservices architectures, which usually involves multiple complex tools and more than a single correlation ID. For the purpose of this workshop, we use a simple approach to demonstrate how to correlate logs. If you want to learn more about distributed tracing, you can check out the [OpenTelemetry](https://opentelemetry.io/) project, which is implemented by the [Dapr](https://dapr.io/) sidecar that you can enable on your container apps.
+
+</div>
 
 ---
 
