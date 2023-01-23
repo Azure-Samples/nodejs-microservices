@@ -39,6 +39,9 @@ az containerapp update \
   --image "$REGISTRY_SERVER/dice-api:$commit_sha" \
   --set-env-vars \
     DATABASE_CONNECTION_STRING="$DATABASE_CONNECTION_STRING" \
+  --scale-rule-name http-rule \
+  --scale-rule-type http \
+  --scale-rule-http-concurrency 100 \
   --query "properties.configuration.ingress.fqdn" \
   --output tsv
 
@@ -53,6 +56,8 @@ az containerapp update \
   --set-env-vars \
     SETTINGS_API_URL="https://${CONTAINER_APP_HOSTNAMES[0]}" \
     DICE_API_URL="https://${CONTAINER_APP_HOSTNAMES[1]}" \
+  --cpu 2 \
+  --memory 4 \
   --query "properties.configuration.ingress.fqdn" \
   --output tsv
 
