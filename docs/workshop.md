@@ -2366,7 +2366,7 @@ Select "*Replica Count*" from the list of metrics, choose "*Max*" for the *Aggre
 
 ![Screenshot of container app metrics](./assets/graph-metrics.png)
 
-#### Create charts for all services
+#### Adding all service to the chart
 
 Now let's add the Replica Count metric for the Settings and Gateway services to the same chart.
 
@@ -2374,7 +2374,7 @@ Select **Add metric** and again select "*Replica Count*" and aggregation "*Max*"
 
 ![Screenshot of all container apps metrics](./assets/graph-metrics-all.png)
 
-Now you should see a nice chart with the Replica Count over time of all three microservices. Let's save this chart on the dashboard!
+After you're done, you should see a nice chart with the Replica Count over time of all three microservices. Let's save this chart on the dashboard!
 
 Select *Save to dashboard* and choose **Pin to dashboard**:
 
@@ -2383,6 +2383,16 @@ Select *Save to dashboard* and choose **Pin to dashboard**:
 In the *Pin to dashboard* dialog, select **Create new** and give it a name, for example "Dice App Metrics" then click **Create and pin**.
 
 ![Screenshot showing the pin new to dashboard dialog](./assets/pin-new-dashboard.png)
+
+#### Adding a CPU usage chart
+
+In addition to monitoring the Replica Count, it might be interesting to also monitor the CPU usage of our containers.
+
+Select **New chart**, and this time select the "*CPU Usage*" metric with "*Max*" for the aggregation. Repeat the same steps as before to add the CPU Usage metric for the remaining services, so you can see all 3 microservices on the same chart.
+
+When you're done, select **Save to dashboard** and choose **Pin to dashboard** on the chart. This time, select the **Existing** tab and choose the "*Dice App Metrics*" dashboard we just created, and validate.
+
+![Screenshot showing the pin existing to dashboard dialog](./assets/pin-existing-dashboard.png)
 
 When you're finished, in the Azure Portal sidebar select **Dashboards** and choose the "*Dice App Metrics*" dashboard we just created.
 
@@ -2393,23 +2403,133 @@ When you're finished, in the Azure Portal sidebar select **Dashboards** and choo
 
 </div>
 
+You should now see your dashboard with the *Replica Count* and *CPU Usage* charts of all three microservices over time.
+
+![Screenshot of the dashboard with the Replica Count and CPU Usage charts](./assets/dashboard.png)
+
+You can also change the time range of the charts by clicking on the time range selector, and change it from "*Past 24 hours*" to "*Past hour*".
+
+![Screenshot of the dashboard time settings](./assets/dashboard-time-settings.png)
+
 ### Scaling our containers
 
-Node.js servers
+Node.js servers not efficient for heavy computation due to the single-threaded nature of the runtime, but they are great for handling a lot of concurrent requests as they handle I/O operations asynchronously. Let's change the scaling rules to allow more concurrent requests and see how it affects the performance of our application.
 
+```bash
+# Retrieve our application names
+source .azure/.prod.env
 
-- test with 100, 1k, 10k rolls -> view graphs
-- review ACA scaling rules -> change with AZ CLI
-- test again -> view graphs
+# Update the scaling rules for the Dice API container app
+az containerapp update \
+    --name ${CONTAINER_APP_NAMES[1]} \
+    --resource-group $RESOURCE_GROUP_NAME \
+    --scale-rule-name http-rule \
+    --scale-rule-type http \
+    --scale-rule-http-concurrency 100
+```
 
-                    {
-                        "name": "scale",
-                        "http": {
-                            "metadata": {
-                                "concurrentRequests": "100"
-                            }
-                        }
-                    }
+Here we added a new scaling rule to allow up to 100 concurrent requests per container for the Dice API service. This means that if the number of concurrent requests is higher than 100, more containers instances will be created to handle the load.
+
+Roll dices again a few times on your deployed website to test how the application behaves.
+Change **Count** to 100, then 1000. What happens? What changed in the metrics and response time?
+
+<div class="tip" data-title="tip">
+
+> You can see the response time on the `/rolls` API by openning the browser's developer tools with `F12` and looking at the network tab.
+
+</div>
+
+If you refresh the metrics dashboard, you should see that the number of containers instances for the Dice API is now lower than before. But looking at the CPU usage for the Gateway API, you can see that it's close to `0.25c` (25% of a CPU core), which it very close to its maximum allowed usage. By default, containers apps, meaning that it's at its limit.
+
+When we set the scaling rules for the Dice API, we allowed it to scale **horizontally** (meaning we add more instances of the service) to handle more concurrent requests. But it the case of the Gateway API, it's bound by CPU usage, so we need to scale **vertically** (meaning we add more resources to the service).
+
+Let's change the scaling rules for the Gateway API to allow give it a more beefier CPU allowance:
+
+```bash
+# Retrieve our application names
+source .azure/.prod.env
+
+# Update the resources for the Gateway API container app
+az containerapp update \
+    --name ${CONTAINER_APP_NAMES[2]} \
+    --resource-group $RESOURCE_GROUP_NAME \
+    --cpu 2
+    --memory 4
+```
+
+Here we allocate 2 CPU cores and 4GB of memory per container for the Gateway API service. Note that CPU and memory values must be matched in pairs, you can see the allowed values in the [container configuration documentation](https://learn.microsoft.com/azure/container-apps/containers#configuration).
+
+If you try rolling dices again, you should see that the response time is much faster than before. When increasing the **Count** to 1000, it should work this time: the first call will be longer to the scaling up process, but the following calls should be much faster.
+
+### Persisting our scale settings
+
+We changed the configuration of our containers using the Azure CLI, but if we retrigger a new deployment the changes we made will be overwritten by our CI/CD. We have two options to persist our changes:
+
+- Update our Infrastructure as Code, changing the Bicep template to reflect the changes we made.
+- Update our deployment script to include our new settings when we update the container apps.
+
+Either method is fine, but we'll use the second option for simplicity. Let's update our deployment script `.azure/deploy.sh` to include the new scaling rules.
+
+Replace the existing command to update the Dice API:
+
+```bash
+az containerapp update \
+  --name "${CONTAINER_APP_NAMES[1]}" \
+  --resource-group "$RESOURCE_GROUP_NAME" \
+  --image "$REGISTRY_SERVER/dice-api:$commit_sha" \
+  --set-env-vars \
+    DATABASE_CONNECTION_STRING="$DATABASE_CONNECTION_STRING" \
+  --query "properties.configuration.ingress.fqdn" \
+  --output tsv
+```
+
+With the following:
+
+```bash
+az containerapp update \
+  --name "${CONTAINER_APP_NAMES[1]}" \
+  --resource-group "$RESOURCE_GROUP_NAME" \
+  --image "$REGISTRY_SERVER/dice-api:$commit_sha" \
+  --set-env-vars \
+    DATABASE_CONNECTION_STRING="$DATABASE_CONNECTION_STRING" \
+  --scale-rule-name http-rule \
+  --scale-rule-type http \
+  --scale-rule-http-concurrency 100 \
+  --query "properties.configuration.ingress.fqdn" \
+  --output tsv
+```
+
+And the existing command to update the Gateway API:
+
+```bash
+az containerapp update \
+  --name "${CONTAINER_APP_NAMES[2]}" \
+  --resource-group "$RESOURCE_GROUP_NAME" \
+  --image "$REGISTRY_SERVER/gateway-api:$commit_sha" \
+  --set-env-vars \
+    SETTINGS_API_URL="https://${CONTAINER_APP_HOSTNAMES[0]}" \
+    DICE_API_URL="https://${CONTAINER_APP_HOSTNAMES[1]}" \
+  --query "properties.configuration.ingress.fqdn" \
+  --output tsv
+```
+
+With the following:
+
+```bash
+az containerapp update \
+  --name "${CONTAINER_APP_NAMES[2]}" \
+  --resource-group "$RESOURCE_GROUP_NAME" \
+  --image "$REGISTRY_SERVER/gateway-api:$commit_sha" \
+  --set-env-vars \
+    SETTINGS_API_URL="https://${CONTAINER_APP_HOSTNAMES[0]}" \
+    DICE_API_URL="https://${CONTAINER_APP_HOSTNAMES[1]}" \
+  --cpu 2 \
+  --memory 4 \
+  --query "properties.configuration.ingress.fqdn" \
+  --output tsv
+```
+
+Now you can commit and push your changes, and your next deployment will include the new scaling rules.
 
 ---
 
