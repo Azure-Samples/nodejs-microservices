@@ -2620,13 +2620,63 @@ az containerapp revision list \
   --output tsv
 ```
 
+Select *Run* to execute the query. You should see the logs of the Gateway API container app.
 
-- connect to Dice API logs with AZ CLI
-- explain app/system logs
-- explain why tracing (N calls, from which request?)
-- create log analytics request to trace all requests from api gateway call
+For now, it's not very useful as it's the same logs we saw in the previous section. Let's add some filters to the query to search for error messages from the logs:
 
---dapr?
+```sql
+ContainerAppConsoleLogs_CL
+| where RevisionName_s == "ca-gateway-api-<unique_id>--<revision_id>"
+| where Log_err_type_s == "Error"
+```
+
+Select *Run* to execute the query. If you experienced any errors when rolling dices, you should see the errors in the logs.
+To make the logs more easier to read, you can filter the columns to display only the ones you need, by selecting the **Columns** button on the right of the results panel. Select only the `TimeGenerated`, `Log_err_type_s`, `Log_err_message_s` and `Log_err_stack_s` columns:
+
+![Screenshot of the Azure portal showing the columns filtering panel](./assets/portal-logs-columns.png)
+
+We can also make it easier to navigate by making the latest logs appear at the top of the results, and only show the last 10 logs:
+
+```sql
+ContainerAppConsoleLogs_CL
+| where RevisionName_s == "ca-gateway-api-<unique_id>--<revision_id>"
+| where Log_err_type_s == "Error"
+| sort by TimeGenerated desc
+| take 10
+```
+
+Select *Run* to execute the new query. Now you can have a look at the latest error details, by unfolding the row using the chevron on the left:
+
+![Screenshot of the Azure portal showing the error details](./assets/portal-logs-error-details.png)
+
+And we can see our error `502` message and stack trace.
+
+We can save the query for later use by clicking on the **Save** button. You can then give it a name and a description, and a category to quickly find it later.
+
+### Correlating logs
+
+To be able to troubleshoot this error effectively, we need to know which request triggered it. To do that, we need to trace the request from the API Gateway to the Dice API. This is particularly important to know from which request the error comes from, the gateway can trigger hundreds of requests to the Dice API for a single user request.
+
+There are multiple ways to do this, but a common approach is to use a unique identifier for each request, that is passed along the different services using a generic HTTP header. This way, we can filter the logs by this identifier and see all the logs related to a single request. 
+
+<div class="info" data-title="note">
+
+> Distributed tracing is a common practice in microservices architectures, which usually involves multiple complex tools and more than a single correlation ID. For the purpose of this workshop, we'll use a simple approach to demonstrate how to correlate logs. If you want to learn more about distributed tracing, you can check out the [OpenTelemetry](https://opentelemetry.io/) project, which is implemented by the [Dapr](https://dapr.io/) sidecar that you can enable on your container apps.
+
+</div>
+
+Azure Container Apps already generates a unique identifier for each request if it's not provided, and passes it to the API Gateway using the `x-request-id` HTTP header. We can use this identifier to trace the request from the Gateway API to the Dice and Settings APIs.
+
+We won't cover all the details here as this workshop is already long enough as it is, but here are the tasks you would need to do to implement this:
+
+<div class="task" data-title="tasks">
+
+> - Get the request ID from the `x-request-id` HTTP header in the Gateway API
+> - Add the `x-request-id` header with this value to the requests to the Dice and Settings services
+
+</div>
+
+Once you've implemented this, you can redeploy the application with your changes and try to roll the dice again. You should then be able to correlate the logs by filtering on the `x-request-id` header value, making it easier to troubleshoot the issue and find the root cause.
 
 ---
 
