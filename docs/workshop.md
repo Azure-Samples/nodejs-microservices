@@ -1552,10 +1552,7 @@ Next we'll configure the SWA CLI for our project by adding a new `swa-cli.config
       "run": "npm run dev",
       "appBuildCommand": "npm run build",
       "appDevserverUrl": "http://localhost:5173",
-      "apiDevserverUrl": "http://localhost:4003",
-      "start": {
-        "apiLocation": "__dummy"
-      }
+      "apiDevserverUrl": "http://localhost:4003"
     }
   }
 }
