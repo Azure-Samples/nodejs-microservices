@@ -163,7 +163,7 @@ Once the container is ready, you will see "Dev Container: Node.js" in the bottom
 
 #### [optional] Working locally without the dev container
 
-If you want to work locally without using a dev container, you'll need to clone the project and install the following tools:
+If you want to work locally without using a dev container, you need to clone the project and install the following tools:
 
 | | |
 |---------------|--------------------------------|
@@ -432,9 +432,9 @@ This is because we are using the `pino` logger, the default logger for Fastify. 
 npm start --workspace=settings-api | pino-pretty
 ```
 
-![Screenshot showing pretty logs in the terminal](./assets/fastify-pretty-logs.png)
-
 Now it's much better! 🙂
+
+![Screenshot showing pretty logs in the terminal](./assets/fastify-pretty-logs.png)
 
 We'll  use the [REST client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) extension for Visual Studio Code to send requests to our API. This extension allows us to write HTTP requests in a regular text file, and send them with a single click. It's very convenient for testing APIs, as it can be committed to the repository and shared with the team.
 
@@ -1747,7 +1747,7 @@ It's a great way to ensure consistency and repeatability of your infrastructure,
 
 There are many existing tools to manage your infrastructure as code, such as Terraform, Pulumi, or [Azure Resource Manager (ARM) templates](https://learn.microsoft.com/azure/azure-resource-manager/templates/overview). ARM templates are JSON files that allows you to define and configure Azure resources.
 
-In this workshop, we'll [Bicep](https://learn.microsoft.com/azure/azure-resource-manager/bicep/overview?tabs=bicep), a new language that abtracts ARM templates creation while being more concise, readable and easier to use.
+In this workshop, we'll use [Bicep](https://learn.microsoft.com/azure/azure-resource-manager/bicep/overview?tabs=bicep), a new language that abtracts ARM templates creation while being more concise, readable and easier to use.
 
 #### What's Bicep?
 
@@ -1783,16 +1783,13 @@ Bicep templates can be split into multiple files, and you can use modules to reu
 Have a look at the files inside the folder `./azure/infra` to see how we created the infrastructure for this workshop. The entry point is the `main.bicep` file, which is the main template that use the differents modules located in the `./azure/infra/modules` folder.
 
 Writing templates from scratch can be a bit tedious, but fortunately most of the time you don't have to:
-
 - You can reuse templates for the [Azure Quickstart collection](https://github.com/Azure/azure-quickstart-templates/tree/master/quickstarts)
-
 - The [Bicep VS Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-bicep) help you write your templates, providing snippets, syntax highlighting, auto-completion, and validation.
-
 - The [Bicep playground](https://aka.ms/bicepdemo) allows you to convert an ARM template to Bicep, and vice versa.
 
 ### Details about the `infra.sh` script
 
-Because entering a bunch of commands one after the other in a terminal is not very fun, we made a Bash script to automate all the heavy lifting. This is the `.azure/infra.sh` we ran earlier.
+Because entering a bunch of commands one after the other in a terminal is not very fun, we made a Bash script to automate all the heavy lifting. This is the `.azure/infra.sh` script we ran earlier.
 
 This script is a wrapper around Azure CLI commands. The `update` command does the following:
 
@@ -2072,7 +2069,8 @@ You should now see your database account in the panel. You can unfold it to see 
 
 <div class="info" data-title="skip notice">
 
-> If you want to skip the Docker compose details and jump directly to the next section, run this command in the terminal to get the completed code directly: `curl -fsSL https://github.com/Azure-Samples/nodejs-microservices/releases/download/latest/deploy.tar.gz | tar -xvz`. Then commit and push the changes to trigger the deployment.
+> If you want to skip the Docker compose details and jump directly to the next section, run this command in the terminal to get the completed code directly: `curl -fsSL https://github.com/Azure-Samples/nodejs-microservices/releases/download/latest/deploy.tar.gz | tar -xvz`
+Then commit and push the changes to trigger the deployment.
 
 </div>
 
@@ -2205,12 +2203,12 @@ echo "$REGISTRY_PASSWORD" | docker login \
 The first part of the script is similar to the build script, we set the bash options and change the current directory, but in addition we source the variables and secrets from the `.prod.env` file so that we can use them in the script.
 
 After that we prepare a few things:
-- We get the current commit SHA, so we can use it to tag our Docker images
+- We get the current commit [SHA](https://en.wikipedia.org/wiki/Secure_Hash_Algorithms), so we can use it to tag our Docker images
 - We configure the Azure CLI to allow the silent installation of Azure CLI extensions, like the `containerapp` extension we'll use later
 
 Then we configure Docker to log into our private registry, so we can push our Docker images to it.
 
-Now let's add below the commands to our services:
+Now let's add below the commands to deploy our services:
 
 ```bash
 echo "Deploying settings-api..."
@@ -2280,7 +2278,7 @@ We use the Static Web Apps CLI this time deploy our website. Because it's instal
 
 ### Deploying the application
 
-Our workflow, build and deploy scripts are complete, so it's time let the CI/CD pipeline do its job.
+The workflow and scripts are complete, so it's time let the CI/CD pipeline do its job.
 
 Commit all the changes you made to the repository, and push them, using either VS Code or the command line:
 
@@ -2441,7 +2439,7 @@ Change **Count** to 100, then 1000. What happens? What changed in the metrics an
 
 </div>
 
-If you refresh the metrics dashboard, you should see that the number of containers instances for the Dice API is now lower than before. But looking at the CPU usage for the Gateway API, you can see that it's close to `0.25c` (25% of a CPU core), which it very close to its maximum allowed usage. By default, containers apps, meaning that it's at its limit.
+If you refresh the metrics dashboard, you should see that the number of containers instances for the Dice API is now lower than before. But looking at the CPU usage for the Gateway API, you can see that it's close to `0.25c` (25% of a CPU core), which it very close to its maximum allowed usage. By default, a containersapp is set up with 0.25 core CPU and 0.5 GB of memory, meaning that it's at its limit.
 
 When we set the scaling rules for the Dice API, we allowed it to scale **horizontally** (meaning we add more instances of the service) to handle more concurrent requests. But it the case of the Gateway API, it's bound by CPU usage, so we need to scale **vertically** (meaning we add more resources to the service).
 
@@ -2584,7 +2582,7 @@ az containerapp logs show \
 
 </div>
 
-Once you're connected, you should see a stream of logs coming from the Gateway API. If you hit the **Roll** on your deployed website, you'll see more logs appearing in the terminal. The `--follow` option keeps the connection open to see the new logs in real time.
+Once you're connected, you should see a stream of logs coming from the Gateway API. If you hit the **Roll** button on your deployed website, you'll see more logs appearing in the terminal. The `--follow` option keeps the connection open to see the new logs in real time.
 
 While it might be useful to see the logs in real time when you know what you're looking for, it's not very practical to use for debugging a problem. Let's see how we can use the Azure Portal for more advanced log analysis.
 
@@ -2594,7 +2592,7 @@ You can also access the console logs in the [Azure Portal](http://portal.azure.c
 
 Open the [Azure Portal](http://portal.azure.com) and navigate to the resource group `rg-node-microservices-prod` we created for our application.
 
-Select the `logs-node-microservices-prod-<unique_id>` Logs Analytics Workspace, then select *Logs* from the left menu, under the *General* group.
+Select the `logs-node-microservices-prod-<unique_id>` Logs Analytics Workspace, then select **Logs** from the left menu, under the *General* group.
 
 By default, you are presented a list of pre-defined queries. Close this panel by clicking on the **X** button in the top right corner, as we'll create our own query.
 
@@ -2623,7 +2621,7 @@ az containerapp revision list \
   --output tsv
 ```
 
-Select *Run* to execute the query. You should see the logs of the Gateway API container app.
+Select **Run** to execute the query. You should see the logs of the Gateway API container app.
 
 For now, it's not very useful as it's the same logs we saw in the previous section. Let's add some filters to the query to search for error messages from the logs:
 
@@ -2633,7 +2631,7 @@ ContainerAppConsoleLogs_CL
 | where Log_err_type_s == "Error"
 ```
 
-Select *Run* to execute the query. If you experienced any errors when rolling dices, you should see the errors in the logs.
+Select **Run** to execute the query. If you experienced any errors when rolling dices, you should see the errors in the logs.
 To make the logs more easier to read, you can filter the columns to display only the ones you need, by selecting the **Columns** button on the right of the results panel. Select only the `TimeGenerated`, `Log_err_type_s`, `Log_err_message_s` and `Log_err_stack_s` columns:
 
 ![Screenshot of the Azure portal showing the columns filtering panel](./assets/portal-logs-columns.png)
@@ -2648,7 +2646,7 @@ ContainerAppConsoleLogs_CL
 | take 10
 ```
 
-Select *Run* to execute the new query. Now you can have a look at the latest error details, by unfolding the row using the chevron on the left:
+Select **Run** to execute the new query. Now you can have a look at the latest error details, by unfolding the row using the chevron on the left:
 
 ![Screenshot of the Azure portal showing the error details](./assets/portal-logs-error-details.png)
 
@@ -2690,7 +2688,7 @@ This is the end of the workshop. We hope you enjoyed it, learned something new a
 
 If you missed any of the steps or would like to check your final code, you can run this command in the terminal to get the completed solution (be sure to commit your code first!): `curl -fsSL https://github.com/Azure-Samples/nodejs-microservices/releases/download/latest/solution.tar.gz | tar -xvz`
 
-<div class="warning">
+<div class="warning" data-title="had issues?">
 
 > If you experienced any issues during the workshop, please let us know by [creating an issue](https://github.com/Azure-Samples/nodejs-microservices/issues) on the GitHub repository.
 
