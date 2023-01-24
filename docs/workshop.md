@@ -324,7 +324,7 @@ As you can see, we are using a simple object to store the settings of each user.
 
 Now that we have our database plugin, we can create the routes for our API.
 
-Create a new file `packages/settings-api/routes/settings.js` with the following content:
+Create a new file `packages/settings-api/routes/settings/index.js` with the following content:
 
 ```js
 export default async function (fastify, opts) {
@@ -541,7 +541,7 @@ The `--rm` flag tells Docker to delete the container after it stops. The `--publ
 
 You can now test the API again using the `api.http` file just like before, to check that everything works as expected.
 
-Because we might need to run these commands often, we can add them to the scripts section of the `packages/settings/api/package.json` file:
+Because we might need to run these commands often, we can add them to the scripts section of the `packages/settings+api/package.json` file:
 
 ```json
 {
@@ -2664,7 +2664,7 @@ There are multiple ways to do this, but a common approach is to use a unique ide
 For example, we can use the header `x-correlation-id` HTTP header and a
  generated UUID (Universally Unique Identifier). We then use this identifier to trace the request from the Gateway API to the Dice and Settings APIs, and back to the client.
 
-We won't cover all the details here as this workshop is already long enough as it is, but here are the tasks you would need to do to implement this:
+We won't cover all the details here as this workshop is already long enough as it is, but these are the tasks you need to do in order to implement this:
 
 <div class="task" data-title="tasks">
 
@@ -2674,7 +2674,7 @@ We won't cover all the details here as this workshop is already long enough as i
 
 </div>
 
-Once you've implemented this, you can redeploy the application with your changes and try to roll the dice again. You should then be able to correlate the logs by filtering on the `x-correlation-id` header value, making it easier to troubleshoot the issue and find the root cause.
+Once you've implemented this, you can redeploy the application with your changes and try to roll the dice again. You should then be able to correlate the logs by filtering on the `x-correlation-id` header value (`Log_req_headers_x_correlation_id_g` or `Log_res_headers_x_correlation_id_g` in Kusto), making it easier to troubleshoot the issue and find the root cause.
 
 <div class="info" data-title="note">
 
