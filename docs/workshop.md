@@ -705,7 +705,7 @@ Add the following code to the class to implement the `POST /rolls` route:
 ```typescript
   @Post()
   async rollDice(@Body('sides') sides: number) {
-    this.logger.log(`Rolling dice [sides: ${sides}]}`);
+    this.logger.log(`Rolling dice [sides: ${sides}]`);
     const result = Math.ceil(Math.random() * sides);
     await this.db.addRoll({
       sides: sides,
