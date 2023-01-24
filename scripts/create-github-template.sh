@@ -20,7 +20,7 @@ find . -type d -not -path '*node_modules*' -not -path '*.git/*' -not -path './pa
 find . -type f -not -path '*node_modules*' -not -path '*.git/*' -not -path './packages*' -exec cp -r '{}' "$TEMPLATE_HOME/{}" ';'
 cd "$TEMPLATE_HOME"
 rm -rf .git
-git init
+git init -b main
 
 # Create projects
 ./scripts/create-projects.sh
