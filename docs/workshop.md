@@ -4,7 +4,7 @@ description: Discover the fundamentals of microservices architecture and how to 
 type: workshop
 authors: Yohan Lasorsa
 contacts: '@sinedied'
-# banner_url: assets/todo-banner.jpg
+banner_url: assets/todo-banner.jpg
 duration_minutes: 180
 audience: students, devs
 level: intermediate
@@ -402,6 +402,7 @@ Now let's add another route to retrieve the settings of a user. Add this code be
 
 ```js
 fastify.get('/:userId', async function (request, reply) {
+  request.log.info(`Retrieving settings for user ${request.params.userId}`);
   const settings = await fastify.db.getSettings(request.params.userId);
   if (settings) {
     return settings;
