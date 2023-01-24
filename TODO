@@ -1,10 +1,12 @@
 # TODO
-- [ ] add banner
+- [ ] prep: 1 slide + intro
+- [x] add banner
+- [ ] SWA DAB: prep speakers + email to DevRel Studios
+- [ ] PR alt text
 
 ## Nice to have
 - [c] cosmosdb emulator in compose file -> use too much resources
 - [c] add correlation ID in logs (using Dapr?) -> too much changes
 - [ ] add minimal request ID in API gateway -> add fetch middleware
+      * check dapr how to proxy request
 - [ ] website nice CSS
-
-
