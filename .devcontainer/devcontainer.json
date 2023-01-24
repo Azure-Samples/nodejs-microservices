@@ -20,7 +20,7 @@
 	"forwardPorts": [4001, 4002, 4003, 4280],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "npm i -g npm@latest pino-pretty fuzz-run && npm install",
+	"postCreateCommand": "npm i -g npm@latest pino-pretty fuzz-run && npm install && docker pull node:18-alpine",
 
 	// Configure tool-specific properties.
 	"customizations": {
