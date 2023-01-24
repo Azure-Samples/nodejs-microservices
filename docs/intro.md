@@ -18,20 +18,19 @@
 
   .who {
     display: table;
+    width: 100%;
   }
 
   .who img {
-    border: 2px solid var(--primary);
     border-radius: 50%;
     display: block;
     width: 80%;
     max-width: 300px;
     margin: 0 auto;
-    padding: 0 2rem;
   }
 </style>
 
------
+<br><br>
 
 ## Who are we?
 
@@ -54,16 +53,16 @@
   </div>
 </div>
 
------
+<br><br>
 
 ## Quick introduction
 
 ![Application architecture](./assets/architecture.drawio.png)
 
------
+<br><br>
 
 ## The workshop
 
-URL: 👉 [aka.ms/ws/node-microservices](https://aka.ms/ws/node-microservices)
+👉 [aka.ms/ws/node-microservices](https://aka.ms/ws/node-microservices)
 
 ![QRCode](./assets/qrcode.svg)
