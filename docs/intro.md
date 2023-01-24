@@ -1,4 +1,4 @@
-<!-- https://aka.ms/ws/page?src=:gh:azure-samples/nodejs-microservices/main/docs/intro.md -->
+<!-- https://aka.ms/ws/page?src=gh:azure-samples/nodejs-microservices/main/docs/intro.md -->
 
 # Microservices in practice with Node.js, Docker and Azure
 
