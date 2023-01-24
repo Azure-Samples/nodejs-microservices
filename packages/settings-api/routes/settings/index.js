@@ -20,6 +20,7 @@ export default async function (fastify, opts) {
   });
 
   fastify.get('/:userId', async function (request, reply) {
+    request.log.info(`Retrieving settings for user ${request.params.userId}`);
     const settings = await fastify.db.getSettings(request.params.userId);
     if (settings) {
       return settings;
