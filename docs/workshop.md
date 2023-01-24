@@ -2314,7 +2314,7 @@ source .azure/.prod.env
 open "https://$STATIC_WEB_APP_HOSTNAMES"
 ```
 
-You should then see the website. Log in with your GitHub account, and you should be able to roll some dice! By default, containers are allowed to scale down to 0, so it might take a few seconds for the first request to be processed as the containers are started.
+You should then see the website. Log in with your GitHub account, and you should be able to roll some dice!
 
 ![Screenshot showing the deployed website](./assets/app-deployed.png)
 
@@ -2579,7 +2579,7 @@ az containerapp logs show \
 
 <div class="tip" data-title="tip">
 
-> Don't forget that by default, container apps scale out to 0 instances when they're not used. If you get an error from the Azure CLI saying that it could not find any replica, try loading your website first to warm up the container app.
+> By default, container apps scale out to 0 instances when they're not used. If you get an error from the Azure CLI saying that it could not find any replica, try loading your website first to warm up the container app.
 
 </div>
 
