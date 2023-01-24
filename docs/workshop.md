@@ -910,7 +910,7 @@ function getUser(req) {
       .toString('ascii');
 
     if (principal) {
-      return JSON.parse(principal)?.userDetails;
+      return JSON.parse(principal)?.userId;
     }
   } catch (error) {
     req.log.error('Cannot get user', error);
