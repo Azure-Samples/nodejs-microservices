@@ -1084,7 +1084,7 @@ module.exports = {
 
 Now that the heavy lifting is already done in the services, our last step is to add the routes to the Express app.
 
-Open the `packages/gateway-api/index.js` file and replace the content with this:
+Open the `packages/gateway-api/routes/index.js` file and replace the content with this:
 
 ```js
 const express = require('express');
