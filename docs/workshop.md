@@ -20,10 +20,9 @@ sections_title:
 
 In this workshop, we'll explore the fundamentals of microservices architecture and how to implement it from code to production, using Node.js, Docker and Azure.
 
-We will build a complete application including a website with authentication and 3 microservices, deploy it to Azure using a CI/CD pipeline, perform load testing to tune the scaling of our services, and use log tracing and monitoring. And we'll do all that without needing to use Kubernetes!
+We will build a complete application including a website with authentication and 3 microservices, deploy it to Azure using a CI/CD pipeline, monitor and tune the scaling of our services, and use log tracing to debug issues. And we'll do all that without needing to use Kubernetes!
 
-## Goals and topics covered
-- Brief review of microservices architecture and its benefits
+## You'll learn how to...
 - Create Node.js services using 3 differents frameworks
   * [Express](https://expressjs.com/)
   * [Fastify](https://www.fastify.io/)
@@ -34,8 +33,8 @@ We will build a complete application including a website with authentication and
 - Connect services to their database
 - Setup a CI/CD pipeline with GitHub Actions
 - Deploy services to Azure Container Apps
-- Load testing and scaling
-- Exploiting application logs
+- Monitor and scale your services
+- Exploit application logs
 
 ## Prerequisites
 
@@ -1280,7 +1279,7 @@ When you're done, you can stop the services with `Ctrl+C` or by running `docker 
 
 <div class="info" data-title="skip notice">
 
-> If you want to skip the website implementation and jump directly to the next section, run this command in the terminal to get the completed code directly: `curl -fsSL https://github.com/Azure-Samples/nodejs-microservices/releases/download/latest/website.tar.gz | tar -xvz`
+> If you want to skip the website implementation and jump directly to the next section, run this command in the terminal to get the completed code directly: `curl -fsSL https://github.com/Azure-Samples/nodejs-microservices/releases/download/latest/website.tar.gz | tar -xvz && npm install`
 
 </div>
 
@@ -1642,11 +1641,11 @@ Azure is Microsoft's cloud platform. It provides a wide range of services to bui
 
 First, you need to make sure you have an Azure account. If you don't have one, you can create a free account including Azure credits on the [Azure website](https://azure.microsoft.com/free/).
 
-<div class="important" data-title="important">
+<!-- <div class="important" data-title="important">
 
 > If you're following this workshop in-person at SnowCamp, you can use the following link to get a 50$ Azure Pass credit: [redeem your Azure Pass](https://azcheck.in/sno230125)
 
-</div>
+</div> -->
 
 Once you have your Azure account, open a terminal at the root of the project and run:
 
