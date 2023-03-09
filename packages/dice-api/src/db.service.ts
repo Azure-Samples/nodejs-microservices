@@ -33,7 +33,7 @@ export class DbService {
   rolls: Container;
 
   constructor(connectionString: string) {
-    this.client = new CosmosClient(connectionString)
+    this.client = new CosmosClient(connectionString);
   }
 
   async init() {
