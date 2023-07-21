@@ -3,7 +3,7 @@
 # Usage: ./setup.sh <project_name> [environment_name] [location] [options]
 # Setup the current GitHub repo for deploying on Azure.
 ##############################################################################
-# v1.1.3 | dependencies: Azure CLI, GitHub CLI, jq
+# v1.1.4 | dependencies: Azure CLI, GitHub CLI, jq
 ##############################################################################
 
 set -euo pipefail
@@ -66,8 +66,10 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+set +u # Workaround for bash 4 bug
 # Restore positional args
 set -- "${args[@]}"
+set -u
 
 project_name="${1:-$project_name}"
 environment="${2:-$environment}"
