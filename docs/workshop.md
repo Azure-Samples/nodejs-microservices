@@ -2215,12 +2215,18 @@ echo "Deploying settings-api..."
 docker image tag settings-api "$REGISTRY_NAME.azurecr.io/settings-api:$commit_sha"
 docker image push "$REGISTRY_SERVER/settings-api:$commit_sha"
 
+az containerapp secret set \
+  --name "${CONTAINER_APP_NAMES[0]}" \
+  --resource-group "$RESOURCE_GROUP_NAME" \
+  --secrets DB_CONNECTION_STRING="$DATABASE_CONNECTION_STRING" \
+  --output tsv
+
 az containerapp update \
   --name "${CONTAINER_APP_NAMES[0]}" \
   --resource-group "$RESOURCE_GROUP_NAME" \
   --image "$REGISTRY_SERVER/settings-api:$commit_sha" \
   --set-env-vars \
-    DATABASE_CONNECTION_STRING="$DATABASE_CONNECTION_STRING" \
+    DATABASE_CONNECTION_STRING="secretref:DB_CONNECTION_STRING" \
   --query "properties.configuration.ingress.fqdn" \
   --output tsv
 
@@ -2228,12 +2234,18 @@ echo "Deploying dice-api..."
 docker image tag dice-api "$REGISTRY_NAME.azurecr.io/dice-api:$commit_sha"
 docker image push "$REGISTRY_SERVER/dice-api:$commit_sha"
 
+az containerapp secret set \
+  --name "${CONTAINER_APP_NAMES[1]}" \
+  --resource-group "$RESOURCE_GROUP_NAME" \
+  --secrets DB_CONNECTION_STRING="$DATABASE_CONNECTION_STRING" \
+  --output tsv
+
 az containerapp update \
   --name "${CONTAINER_APP_NAMES[1]}" \
   --resource-group "$RESOURCE_GROUP_NAME" \
   --image "$REGISTRY_SERVER/dice-api:$commit_sha" \
   --set-env-vars \
-    DATABASE_CONNECTION_STRING="$DATABASE_CONNECTION_STRING" \
+    DATABASE_CONNECTION_STRING="secretref:DB_CONNECTION_STRING" \
   --query "properties.configuration.ingress.fqdn" \
   --output tsv
 
@@ -2252,9 +2264,10 @@ az containerapp update \
   --output tsv
 ```
 
-We'll do the same thing for our 3 services:
+We'll do the almost same thing for our 3 services:
 1. We tag the Docker image with the current commit SHA, and push it to our registry
-2. We use the Azure CLI to update the container app with the new image, and set the environment variables for each service. For the settings and dice APIs, we set the database connection string, and for the gateway API we set the URLs of the other services.
+2. We add the database connection string in the list of secrets for the settings and dice APIs, so it's not exposed as plain text in the environment variables
+3. We use the Azure CLI to update the container app with the new image, and set the environment variables for each service. For the settings and dice APIs, we set the database connection string with a reference to the secret set earlier with `secretref:<secret_name>`, and for the gateway API we set the URLs of the other services.
 
 <div class="tip" data-title="tip">
 
