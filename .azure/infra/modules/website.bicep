@@ -51,7 +51,7 @@ var linkedBackendId = backendType == 'container' ? container.id : ''
 
 // Azure Static Web Apps
 // https://docs.microsoft.com/azure/templates/microsoft.web/staticsites?tabs=bicep
-resource staticWebApp 'Microsoft.Web/staticSites@2021-03-01' = {
+resource staticWebApp 'Microsoft.Web/staticSites@2022-09-01' = {
   name: 'website-${projectName}-${environment}-${uid}'
   location: location
   tags: tags
@@ -67,7 +67,7 @@ resource staticWebApp 'Microsoft.Web/staticSites@2021-03-01' = {
 
   // Azure Static Web Apps linked backends
   // https://learn.microsoft.com/fazure/templates/microsoft.web/staticsites/linkedbackends?pivots=deployment-language-bicep
-  resource staticWebAppBackend 'linkedBackends@2022-03-01' = if (linkedBackend) {
+  resource staticWebAppBackend 'linkedBackends@2022-09-01' = if (linkedBackend) {
     name: 'website-api-${projectName}-${environment}-${uid}'
     properties: {
       backendResourceId: linkedBackendId
