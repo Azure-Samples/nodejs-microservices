@@ -1,4 +1,5 @@
 # TODO
+- [ ] fix dice api tests
 - [ ] add correlation ID in logs (using Dapr?)
   - [ ] using fetch middleware
   * check dapr how to proxy request + fetch middleware
