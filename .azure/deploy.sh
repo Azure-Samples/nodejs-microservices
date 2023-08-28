@@ -23,7 +23,7 @@ docker image push "$REGISTRY_SERVER/settings-api:$commit_sha"
 az containerapp secret set \
   --name "${CONTAINER_APP_NAMES[0]}" \
   --resource-group "$RESOURCE_GROUP_NAME" \
-  --secrets DB_CONNECTION_STRING="$DATABASE_CONNECTION_STRING" \
+  --secrets db-connection-string="$DATABASE_CONNECTION_STRING" \
   --output tsv
 
 az containerapp update \
@@ -31,7 +31,7 @@ az containerapp update \
   --resource-group "$RESOURCE_GROUP_NAME" \
   --image "$REGISTRY_SERVER/settings-api:$commit_sha" \
   --set-env-vars \
-    DATABASE_CONNECTION_STRING="secretref:DB_CONNECTION_STRING" \
+    DATABASE_CONNECTION_STRING="secretref:db-connection-string" \
   --query "properties.configuration.ingress.fqdn" \
   --output tsv
 
@@ -42,7 +42,7 @@ docker image push "$REGISTRY_SERVER/dice-api:$commit_sha"
 az containerapp secret set \
   --name "${CONTAINER_APP_NAMES[1]}" \
   --resource-group "$RESOURCE_GROUP_NAME" \
-  --secrets DB_CONNECTION_STRING="$DATABASE_CONNECTION_STRING" \
+  --secrets db-connection-string="$DATABASE_CONNECTION_STRING" \
   --output tsv
 
 az containerapp update \
@@ -50,7 +50,7 @@ az containerapp update \
   --resource-group "$RESOURCE_GROUP_NAME" \
   --image "$REGISTRY_SERVER/dice-api:$commit_sha" \
   --set-env-vars \
-    DATABASE_CONNECTION_STRING="secretref:DB_CONNECTION_STRING" \
+    DATABASE_CONNECTION_STRING="secretref:db-connection-string" \
   --scale-rule-name http-rule \
   --scale-rule-type http \
   --scale-rule-http-concurrency 100 \
