@@ -60,6 +60,6 @@ export class DbService {
         ],
       })
       .fetchAll();
-    return resources.sort((a, b) => a.timestamp - b.timestamp);
+    return (resources as Roll[]).sort((a, b) => a.timestamp - b.timestamp);
   }
 }
