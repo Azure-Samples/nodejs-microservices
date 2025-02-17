@@ -168,7 +168,7 @@ If you want to work locally without using a dev container, you need to clone the
 |---------------|--------------------------------|
 | Git           | [Get Git](https://git-scm.com) |
 | Docker v20+   | [Get Docker](https://docs.docker.com/get-docker) |
-| Node.js v18+  | [Get Node.js](https://nodejs.org) |
+| Node.js v20+  | [Get Node.js](https://nodejs.org) |
 | Azure CLI     | [Get Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli#install) |
 | GitHub CLI    | [Get GitHub CLI](https://cli.github.com/manual/installation) |
 | Azure Static Web Apps CLI | [Get Azure Static Web Apps CLI](https://github.com/Azure/static-web-apps-cli#installing-the-cli-with-npm-yarn-or-pnpm) |
@@ -478,7 +478,7 @@ Let's create a file `Dockerfile` under the `packages/settings-api` folder to bui
 
 ```dockerfile
 # syntax=docker/dockerfile:1
-FROM node:18-alpine
+FROM node:20-alpine
 ENV NODE_ENV=production
 
 WORKDIR /app
@@ -489,7 +489,7 @@ EXPOSE 4001
 CMD [ "npm", "start", "--workspace=settings-api" ]
 ```
 
-The first statement `FROM node:18-alpine` means that we use the [node image](https://hub.docker.com/_/node) as a base, with Node.js 18 installed. The `alpine` variant is a lightweight version of the image, that results in a smaller container size, which is great for production environments.
+The first statement `FROM node:20-alpine` means that we use the [node image](https://hub.docker.com/_/node) as a base, with Node.js 20 installed. The `alpine` variant is a lightweight version of the image, that results in a smaller container size, which is great for production environments.
 
 The second statement `ENV NODE_ENV=production` sets the `NODE_ENV` environment variable to `production`. This is a convention in the Node.js ecosystem to indicate that the app is running in production mode. It enables production optimizations in most frameworks.
 
@@ -791,7 +791,7 @@ We'll use the [multi-stage build](https://docs.docker.com/develop/develop-images
 
 # Build Node.js app
 # ------------------------------------
-FROM node:18-alpine as build
+FROM node:20-alpine as build
 WORKDIR /app
 COPY ./package*.json ./
 COPY ./packages/dice-api ./packages/dice-api
@@ -808,7 +808,7 @@ Now we can create the second stage of our Dockerfile, that will be used to creat
 ```dockerfile
 # Run Node.js app
 # ------------------------------------
-FROM node:18-alpine
+FROM node:20-alpine
 ENV NODE_ENV=production
 
 WORKDIR /app
@@ -1170,7 +1170,7 @@ Let's create a file `Dockerfile` under the `packages/gateway-api`:
 
 ```dockerfile
 # syntax=docker/dockerfile:1
-FROM node:18-alpine
+FROM node:20-alpine
 ENV NODE_ENV=production
 
 WORKDIR /app
@@ -2114,7 +2114,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Login to Azure
         run: .azure/setup.sh --ci-login

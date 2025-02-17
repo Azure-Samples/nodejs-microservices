@@ -5,7 +5,7 @@ Discover the fundamentals of microservices architecture and how to implement the
 👉 [See the workshop](https://aka.ms/ws/node-microservices)
 
 ## Prerequisites
-- Node.js v18+
+- Node.js v20+
 - Docker v20+
 - An Azure account ([sign up for free here](https://azure.microsoft.com/free/?WT.mc_id=javascript-0000-yolasors))
 
